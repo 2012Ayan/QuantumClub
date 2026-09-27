@@ -766,7 +766,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const QUANTUM_AI_ENDPOINT = "/api/quantum-ai";
     */
 
-    const QUANTUM_AI_ENDPOINT = "";
+    const QUANTUM_AI_ENDPOINT = "https://quantumai.2012ayan27.workers.dev/";
 
     const miniAiForm =
         document.getElementById("miniAiForm");
