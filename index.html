@@ -50,33 +50,13 @@
             </button>
         </form>
 
+        <p class="name-error" id="nameError">
+            You are not part of Quantum Club.
+        </p>
+
         <div class="name-security">
             <span>●</span> ENCRYPTED ACCESS // MEMBER VERIFICATION
         </div>
-    </div>
-</section>
-
-<!-- =====================================================
-     REJECTION SCREEN
-===================================================== -->
-
-<section class="rejection-screen" id="rejectionScreen">
-    <div class="rejection-grid"></div>
-
-    <div class="rejection-box">
-        <div class="rejection-symbol">!</div>
-
-        <div class="rejection-code">ACCESS DENIED // 403</div>
-
-        <h2>YOU ARE NOT PART OF<br>QUANTUM CLUB.</h2>
-
-        <div class="rejection-glitch" data-text="GO AWAY.">GO AWAY.</div>
-
-        <p id="rejectionName">IDENTITY NOT RECOGNIZED</p>
-
-        <button class="btn rejection-button" id="retryAccess">
-            TRY AGAIN
-        </button>
     </div>
 </section>
 
@@ -456,22 +436,15 @@
 ===================================================== -->
 
 <section class="page" id="page-chat">
-    <div class="page-inner chat-page-inner">
-
-        <div class="window-top chat-window-top">
-            <div>
-                <div class="eyebrow">QUANTUM SOCIAL NETWORK</div>
-                <h2>Memes <span>& Chat.</span></h2>
-            </div>
-
-            <button class="back-button nav-open" data-page="home">
-                ← BACK HOME
-            </button>
-        </div>
+    <div class="page-inner chat-page-inner full-bleed">
 
         <div class="chat-wrapper">
 
             <div class="chat-header">
+                <button class="chat-back-button back-button nav-open" data-page="home" title="Back home">
+                    ←
+                </button>
+
                 <div class="chat-title">
                     <div class="group-avatar">9Q</div>
 
@@ -503,6 +476,14 @@
                 <span></span>
                 <span></span>
                 <label>typing...</label>
+            </div>
+
+            <div class="voice-recorder-bar" id="voiceRecorderBar">
+                <span class="voice-recorder-dot"></span>
+                <span class="voice-recorder-time" id="voiceRecorderTime">0:00</span>
+                <span class="voice-recorder-label">Recording voice note...</span>
+                <button type="button" class="voice-recorder-cancel" id="voiceCancelButton">CANCEL</button>
+                <button type="button" class="voice-recorder-send" id="voiceStopButton">SEND ➤</button>
             </div>
 
             <form class="chat-input-area" id="chatForm">
@@ -554,22 +535,15 @@
 ===================================================== -->
 
 <section class="page" id="page-ai">
-    <div class="page-inner ai-page-inner">
-
-        <div class="window-top">
-            <div>
-                <div class="eyebrow">QUANTUM INTELLIGENCE SYSTEM</div>
-                <h2>Quantum <span>AI.</span></h2>
-            </div>
-
-            <button class="back-button nav-open" data-page="home">
-                ← BACK HOME
-            </button>
-        </div>
+    <div class="page-inner ai-page-inner full-bleed">
 
         <div class="ai-interface">
 
             <div class="ai-interface-header">
+                <button class="chat-back-button back-button nav-open" data-page="home" title="Back home">
+                    ←
+                </button>
+
                 <div class="ai-brand">
                     <div class="ai-orb">
                         <div class="orb-core"></div>
@@ -663,7 +637,38 @@
             </button>
         </div>
 
-        <div class="game-container">
+        <!-- ARCADE SELECT COVER -->
+        <div class="arcade-select-grid" id="arcadeSelect">
+
+            <button class="arcade-select-card" data-game="pong">
+                <span class="arcade-select-icon">◈</span>
+                <span class="launch-label">GAME // 01</span>
+                <strong>Pong</strong>
+                <small>First to 7 wins. W/S or ↑/↓.</small>
+            </button>
+
+            <button class="arcade-select-card" data-game="snake">
+                <span class="arcade-select-icon">▦</span>
+                <span class="launch-label">GAME // 02</span>
+                <strong>Snake</strong>
+                <small>Classic grid chase. Eat & grow.</small>
+            </button>
+
+            <button class="arcade-select-card" data-game="tictactoe">
+                <span class="arcade-select-icon">✕</span>
+                <span class="launch-label">GAME // 03</span>
+                <strong>Tic Tac Toe</strong>
+                <small>Outsmart the Quantum AI.</small>
+            </button>
+
+        </div>
+
+        <!-- PONG -->
+        <div class="game-container hidden" id="pongContainer">
+
+            <button class="back-button arcade-back-button" data-arcade-back>
+                ← ALL GAMES
+            </button>
 
             <div class="game-header">
                 <div>
@@ -715,6 +720,109 @@
             </div>
 
         </div>
+
+        <!-- SNAKE -->
+        <div class="game-container hidden" id="snakeContainer">
+
+            <button class="back-button arcade-back-button" data-arcade-back>
+                ← ALL GAMES
+            </button>
+
+            <div class="game-header">
+                <div>
+                    <h3>SNAKE</h3>
+                    <span class="game-subtitle">EAT. GROW. DON'T CRASH.</span>
+                </div>
+
+                <div class="score-board">
+                    <div>
+                        <span>SCORE</span>
+                        <strong id="snakeScore">0</strong>
+                    </div>
+
+                    <div class="score-divider">:</div>
+
+                    <div>
+                        <span>BEST</span>
+                        <strong id="snakeBest">0</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="canvas-wrapper">
+                <canvas id="snakeCanvas" width="500" height="500"></canvas>
+
+                <div class="game-overlay" id="snakeOverlay">
+                    <div class="game-overlay-content">
+                        <div class="arcade-icon">▦</div>
+                        <h3 id="snakeOverlayTitle">QUANTUM SNAKE</h3>
+                        <p id="snakeOverlayText">
+                            Use arrow keys or WASD. Don't hit yourself.
+                        </p>
+                        <button class="btn btn-primary" id="startSnake">
+                            START GAME
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-controls">
+                <span>W / A / S / D</span>
+                <span>↑ / ↓ / ← / →</span>
+                <span>TOUCH CONTROLS AVAILABLE</span>
+            </div>
+
+            <div class="touch-controls snake-touch-controls">
+                <button id="snakeLeft">◄</button>
+                <div class="snake-touch-vertical">
+                    <button id="snakeUp">▲</button>
+                    <button id="snakeDown">▼</button>
+                </div>
+                <button id="snakeRight">►</button>
+            </div>
+
+        </div>
+
+        <!-- TIC TAC TOE -->
+        <div class="game-container hidden" id="tttContainer">
+
+            <button class="back-button arcade-back-button" data-arcade-back>
+                ← ALL GAMES
+            </button>
+
+            <div class="game-header">
+                <div>
+                    <h3>TIC TAC TOE</h3>
+                    <span class="game-subtitle">YOU ARE X // AI IS O</span>
+                </div>
+
+                <div class="score-board">
+                    <div>
+                        <span>YOU</span>
+                        <strong id="tttPlayerScore">0</strong>
+                    </div>
+
+                    <div class="score-divider">:</div>
+
+                    <div>
+                        <span>AI</span>
+                        <strong id="tttAiScore">0</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ttt-wrapper">
+                <div class="ttt-board" id="tttBoard"></div>
+
+                <div class="ttt-status" id="tttStatus">Your move.</div>
+
+                <button class="btn btn-secondary" id="tttReset">
+                    RESET BOARD
+                </button>
+            </div>
+
+        </div>
+
     </div>
 </section>
 
