@@ -2,902 +2,751 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <meta name="description" content="9C QUANTUM — our class hub for memes, homework, tests and games.">
-    <meta name="theme-color" content="#08050d">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="9C QUANTUM — the private class hub for the Quantum Club.">
+    <meta name="theme-color" content="#060509">
     <title>9C QUANTUM | Class Hub</title>
-
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="locked">
 
-    <!-- BACKGROUND -->
-    <div class="background">
-        <div class="grid-overlay"></div>
-        <div class="glow glow-one"></div>
-        <div class="glow glow-two"></div>
-        <div class="noise"></div>
+<div class="background">
+    <div class="grid-overlay"></div>
+    <div class="glow glow-one"></div>
+    <div class="glow glow-two"></div>
+    <div class="noise"></div>
+</div>
+
+<!-- =====================================================
+     ACCESS GATE
+===================================================== -->
+
+<section class="name-screen" id="nameScreen">
+    <div class="name-box">
+        <div class="name-system">QUANTUM CLUB // PRIVATE NETWORK</div>
+
+        <div class="name-icon">Q</div>
+
+        <h1>9C <span>QUANTUM</span></h1>
+
+        <p class="name-description">
+            Identify yourself to enter the Quantum Club.
+            Only registered members may access the network.
+        </p>
+
+        <form id="nameForm" autocomplete="off">
+            <input
+                id="nameInput"
+                type="text"
+                placeholder="Enter your full name..."
+                maxlength="60"
+                spellcheck="false"
+                autocomplete="off"
+                required
+            >
+            <button class="btn btn-primary" type="submit">
+                ENTER QUANTUM
+            </button>
+        </form>
+
+        <div class="name-security">
+            <span>●</span> ENCRYPTED ACCESS // MEMBER VERIFICATION
+        </div>
     </div>
+</section>
 
-    <!-- NAME SETUP -->
-    <div class="name-screen" id="nameScreen">
-        <div class="name-box">
-            <div class="name-system">QUANTUM ID SYSTEM</div>
+<!-- =====================================================
+     REJECTION SCREEN
+===================================================== -->
 
-            <div class="name-icon">◈</div>
+<section class="rejection-screen" id="rejectionScreen">
+    <div class="rejection-grid"></div>
 
-            <p class="eyebrow">WELCOME TO</p>
-            <h1>9C <span>QUANTUM</span></h1>
+    <div class="rejection-box">
+        <div class="rejection-symbol">!</div>
 
-            <p class="name-description">
-                Enter your name to join the squad.
-                Your identity will be saved on this device.
+        <div class="rejection-code">ACCESS DENIED // 403</div>
+
+        <h2>YOU ARE NOT PART OF<br>QUANTUM CLUB.</h2>
+
+        <div class="rejection-glitch" data-text="GO AWAY.">GO AWAY.</div>
+
+        <p id="rejectionName">IDENTITY NOT RECOGNIZED</p>
+
+        <button class="btn rejection-button" id="retryAccess">
+            TRY AGAIN
+        </button>
+    </div>
+</section>
+
+<!-- =====================================================
+     NAVBAR
+===================================================== -->
+
+<header class="navbar">
+    <button class="logo nav-open" data-page="home">
+        <span class="logo-bracket">[</span>9C QUANTUM<span class="logo-bracket">]</span>
+    </button>
+
+    <nav id="mainNav">
+        <button class="nav-link active" data-page="home">Home</button>
+        <button class="nav-link" data-page="boys">The Boys</button>
+        <button class="nav-link" data-page="chat">Memes & Chat</button>
+        <button class="nav-link" data-page="ai">Quantum AI</button>
+        <button class="nav-link" data-page="games">Games</button>
+    </nav>
+
+    <button class="mobile-menu" id="mobileMenu" aria-label="Open navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+</header>
+
+<main>
+
+<!-- =====================================================
+     HOME
+===================================================== -->
+
+<section class="page active-page" id="page-home">
+    <div class="page-inner home-page">
+
+        <div class="hero-content">
+
+            <div class="status-pill">
+                <span class="status-dot"></span>
+                QUANTUM CLUB ONLINE
+            </div>
+
+            <div class="eyebrow">WELCOME TO THE NETWORK</div>
+
+            <h1 class="hero-title">
+                <span>9C</span>
+                <span>QUANTUM</span>
+            </h1>
+
+            <p class="hero-description">
+                One class. One squad. One digital universe.<br>
+                Built by the boys of 9C.
             </p>
 
-            <form id="nameForm">
+            <div class="hero-user">
+                <span class="user-dot"></span>
+                IDENTIFIED AS
+                <strong id="heroUserName">QUANTUM MEMBER</strong>
+            </div>
+
+            <div class="hero-buttons">
+                <button class="btn btn-primary nav-open" data-page="chat">
+                    OPEN THE CHAT
+                    <span>→</span>
+                </button>
+
+                <button class="btn btn-secondary nav-open" data-page="games">
+                    ENTER ARCADE
+                    <span>↗</span>
+                </button>
+            </div>
+
+            <div class="hero-stats">
+                <div>
+                    <strong>14</strong>
+                    <span>MEMBERS</span>
+                </div>
+
+                <div>
+                    <strong>∞</strong>
+                    <span>MEMORIES</span>
+                </div>
+
+                <div>
+                    <strong>01</strong>
+                    <span>SQUAD</span>
+                </div>
+            </div>
+
+            <!-- MINI AI -->
+            <div class="mini-ai">
+                <div class="mini-ai-header">
+                    <div class="mini-ai-title">
+                        <div class="ai-orb small"></div>
+                        <div>
+                            <strong>QUANTUM AI</strong>
+                            <span>INTELLIGENCE CORE</span>
+                        </div>
+                    </div>
+
+                    <button class="mini-ai-expand nav-open" data-page="ai">
+                        ↗
+                    </button>
+                </div>
+
+                <div class="mini-ai-body">
+                    <div class="mini-ai-status">
+                        <span></span>
+                        AI CORE READY
+                    </div>
+
+                    <p>
+                        Ask Quantum anything.
+                    </p>
+
+                    <form id="miniAiForm" class="mini-ai-form">
+                        <input
+                            id="miniAiInput"
+                            type="text"
+                            placeholder="Ask Quantum..."
+                            autocomplete="off"
+                        >
+                        <button type="submit">→</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="home-launch-grid">
+
+            <button class="launch-card nav-open" data-page="boys">
+                <span class="launch-icon">◈</span>
+                <span class="launch-label">01 // ROSTER</span>
+                <strong>The Squad</strong>
+                <small>Meet the Quantum members.</small>
+            </button>
+
+            <button class="launch-card nav-open" data-page="chat">
+                <span class="launch-icon">◉</span>
+                <span class="launch-label">02 // SOCIAL</span>
+                <strong>Memes & Chat</strong>
+                <small>Talk. Send memes. Drop chaos.</small>
+            </button>
+
+            <button class="launch-card nav-open" data-page="ai">
+                <span class="launch-icon">✦</span>
+                <span class="launch-label">03 // INTELLIGENCE</span>
+                <strong>Quantum AI</strong>
+                <small>Your class AI assistant.</small>
+            </button>
+
+            <button class="launch-card nav-open" data-page="games">
+                <span class="launch-icon">▣</span>
+                <span class="launch-label">04 // ARCADE</span>
+                <strong>Quantum Arcade</strong>
+                <small>Play. Compete. Dominate.</small>
+            </button>
+
+        </div>
+
+    </div>
+</section>
+
+<!-- =====================================================
+     THE BOYS
+===================================================== -->
+
+<section class="page" id="page-boys">
+    <div class="page-inner">
+
+        <div class="window-top">
+            <div>
+                <div class="eyebrow">QUANTUM DATABASE // 001</div>
+                <h2>The <span>Boys.</span></h2>
+            </div>
+
+            <button class="back-button nav-open" data-page="home">
+                ← BACK HOME
+            </button>
+        </div>
+
+        <p class="section-heading-text">
+            The official Quantum Club roster. Fourteen members currently
+            operating inside the network.
+        </p>
+
+        <!-- RETIRED LEGEND -->
+        <div class="legend-card">
+            <div class="legend-scan"></div>
+
+            <div class="legend-avatar">AA</div>
+
+            <div class="legend-info">
+                <div class="legend-label">
+                    ★ RETIRED LEGEND // ARCHIVE
+                </div>
+                <h3>Ahmed Anwar</h3>
+                <p>Quantum Club original · No longer in the active roster</p>
+            </div>
+
+            <div class="legend-status">
+                <span></span>
+                RETIRED
+            </div>
+        </div>
+
+        <div class="roster-label">
+            <span>ACTIVE MEMBERS</span>
+            <i></i>
+            <small>14 / 14</small>
+        </div>
+
+        <div class="boys-grid">
+
+            <article class="boy-card">
+                <span class="card-number">01</span>
+                <div class="avatar">AA</div>
+                <div class="boy-info">
+                    <span class="boy-role">MEMBER // 001</span>
+                    <h3>Ayan Ahmed</h3>
+                    <p>Quantum Club member</p>
+                </div>
+                <div class="card-glow"></div>
+            </article>
+
+            <article class="boy-card">
+                <span class="card-number">02</span>
+                <div class="avatar">MK</div>
+                <div class="boy-info">
+                    <span class="boy-role">MEMBER // 002</span>
+                    <h3>Mohsin Kabeer</h3>
+                    <p>Quantum Club member</p>
+                </div>
+                <div class="card-glow"></div>
+            </article>
+
+            <article class="boy-card">
+                <span class="card-number">03</span>
+                <div class="avatar">AZ</div>
+                <div class="boy-info">
+                    <span class="boy-role">MEMBER // 003</span>
+                    <h3>Azan Zaheer</h3>
+                    <p>Quantum Club member</p>
+                </div>
+                <div class="card-glow"></div>
+            </article>
+
+            <article class="boy-card">
+                <span class="card-number">04</span>
+                <div class="avatar">MS</div>
+                <div class="boy-info">
+                    <span class="boy-role">MEMBER // 004</span>
+                    <h3>Mallahat Shehzad</h3>
+                    <p>Quantum Club member</p>
+                </div>
+                <div class="card-glow"></div>
+            </article>
+
+            <article class="boy-card">
+                <span class="card-number">05</span>
+                <div class="avatar">TG</div>
+                <div class="boy-info">
+                    <span class="boy-role">MEMBER // 005</span>
+                    <h3>Tayyab Ghuman</h3>
+                    <p>Quantum Club member</p>
+                </div>
+                <div class="card-glow"></div>
+            </article>
+
+            <article class="boy-card">
+                <span class="card-number">06</span>
+                <div class="avatar">SR</div>
+                <div class="boy-info">
+                    <span class="boy-role">MEMBER // 006</span>
+                    <h3>Sufi Ur Rehman</h3>
+                    <p>Quantum Club member</p>
+                </div>
+                <div class="card-glow"></div>
+            </article>
+
+            <article class="boy-card">
+                <span class="card-number">07</span>
+                <div class="avatar">UR</div>
+                <div class="boy-info">
+                    <span class="boy-role">MEMBER // 007</span>
+                    <h3>Ubaid Rizwan</h3>
+                    <p>Quantum Club member</p>
+                </div>
+                <div class="card-glow"></div>
+            </article>
+
+            <article class="boy-card">
+                <span class="card-number">08</span>
+                <div class="avatar">SQ</div>
+                <div class="boy-info">
+                    <span class="boy-role">MEMBER // 008</span>
+                    <h3>Salahudin Qamr</h3>
+                    <p>Quantum Club member</p>
+                </div>
+                <div class="card-glow"></div>
+            </article>
+
+            <article class="boy-card">
+                <span class="card-number">09</span>
+                <div class="avatar">SA</div>
+                <div class="boy-info">
+                    <span class="boy-role">MEMBER // 009</span>
+                    <h3>Saad Afzal</h3>
+                    <p>Quantum Club member</p>
+                </div>
+                <div class="card-glow"></div>
+            </article>
+
+            <article class="boy-card">
+                <span class="card-number">10</span>
+                <div class="avatar">TJ</div>
+                <div class="boy-info">
+                    <span class="boy-role">MEMBER // 010</span>
+                    <h3>Talha Jameel</h3>
+                    <p>Quantum Club member</p>
+                </div>
+                <div class="card-glow"></div>
+            </article>
+
+            <article class="boy-card">
+                <span class="card-number">11</span>
+                <div class="avatar">AM</div>
+                <div class="boy-info">
+                    <span class="boy-role">MEMBER // 011</span>
+                    <h3>Abdullah Mozam</h3>
+                    <p>Quantum Club member</p>
+                </div>
+                <div class="card-glow"></div>
+            </article>
+
+            <article class="boy-card">
+                <span class="card-number">12</span>
+                <div class="avatar">AQ</div>
+                <div class="boy-info">
+                    <span class="boy-role">MEMBER // 012</span>
+                    <h3>Abdullah Qadir</h3>
+                    <p>Quantum Club member</p>
+                </div>
+                <div class="card-glow"></div>
+            </article>
+
+            <article class="boy-card">
+                <span class="card-number">13</span>
+                <div class="avatar">AY</div>
+                <div class="boy-info">
+                    <span class="boy-role">MEMBER // 013</span>
+                    <h3>Aarib Yaseen</h3>
+                    <p>Quantum Club member</p>
+                </div>
+                <div class="card-glow"></div>
+            </article>
+
+            <article class="boy-card">
+                <span class="card-number">14</span>
+                <div class="avatar">HM</div>
+                <div class="boy-info">
+                    <span class="boy-role">MEMBER // 014</span>
+                    <h3>Huzaifa Mubarik</h3>
+                    <p>Quantum Club member</p>
+                </div>
+                <div class="card-glow"></div>
+            </article>
+
+        </div>
+    </div>
+</section>
+
+<!-- =====================================================
+     CHAT
+===================================================== -->
+
+<section class="page" id="page-chat">
+    <div class="page-inner chat-page-inner">
+
+        <div class="window-top chat-window-top">
+            <div>
+                <div class="eyebrow">QUANTUM SOCIAL NETWORK</div>
+                <h2>Memes <span>& Chat.</span></h2>
+            </div>
+
+            <button class="back-button nav-open" data-page="home">
+                ← BACK HOME
+            </button>
+        </div>
+
+        <div class="chat-wrapper">
+
+            <div class="chat-header">
+                <div class="chat-title">
+                    <div class="group-avatar">9Q</div>
+
+                    <div>
+                        <h3>The Boys</h3>
+                        <span>
+                            <i class="online-indicator"></i>
+                            14 Quantum members
+                        </span>
+                    </div>
+                </div>
+
+                <div class="chat-actions">
+                    <button id="chatSearchButton" title="Search">⌕</button>
+                    <button id="chatMoreButton" title="More">•••</button>
+                </div>
+            </div>
+
+            <div class="messages" id="messages">
+                <div class="chat-empty">
+                    <div class="empty-orb">Q</div>
+                    <strong>QUANTUM CHAT IS EMPTY</strong>
+                    <span>Be the first one to say something.</span>
+                </div>
+            </div>
+
+            <div class="typing-indicator" id="typingIndicator">
+                <span></span>
+                <span></span>
+                <span></span>
+                <label>typing...</label>
+            </div>
+
+            <form class="chat-input-area" id="chatForm">
+
                 <input
-                    type="text"
-                    id="nameInput"
-                    maxlength="24"
-                    placeholder="Enter your name..."
-                    autocomplete="name"
-                    required
+                    id="memeInput"
+                    type="file"
+                    accept="image/*"
+                    hidden
                 >
 
-                <button class="btn btn-primary" type="submit">
-                    ENTER QUANTUM
+                <button
+                    type="button"
+                    class="chat-tool"
+                    id="uploadButton"
+                    title="Upload meme"
+                >＋</button>
+
+                <button
+                    type="button"
+                    class="chat-tool voice-button"
+                    id="voiceButton"
+                    title="Record voice note"
+                >🎙</button>
+
+                <input
+                    id="messageInput"
+                    type="text"
+                    placeholder="Message the boys..."
+                    maxlength="1000"
+                    autocomplete="off"
+                >
+
+                <button
+                    type="submit"
+                    class="send-button"
+                    id="sendButton"
+                    title="Send"
+                >➤</button>
+
+            </form>
+        </div>
+
+    </div>
+</section>
+
+<!-- =====================================================
+     QUANTUM AI
+===================================================== -->
+
+<section class="page" id="page-ai">
+    <div class="page-inner ai-page-inner">
+
+        <div class="window-top">
+            <div>
+                <div class="eyebrow">QUANTUM INTELLIGENCE SYSTEM</div>
+                <h2>Quantum <span>AI.</span></h2>
+            </div>
+
+            <button class="back-button nav-open" data-page="home">
+                ← BACK HOME
+            </button>
+        </div>
+
+        <div class="ai-interface">
+
+            <div class="ai-interface-header">
+                <div class="ai-brand">
+                    <div class="ai-orb">
+                        <div class="orb-core"></div>
+                    </div>
+
+                    <div>
+                        <h3>QUANTUM AI</h3>
+                        <p>
+                            Gemini-powered intelligence core
+                        </p>
+                    </div>
+                </div>
+
+                <div class="ai-live">
+                    <span></span>
+                    CORE READY
+                </div>
+            </div>
+
+            <div class="ai-messages" id="aiMessages">
+                <div class="ai-welcome">
+                    <div class="ai-welcome-orb">Q</div>
+
+                    <div>
+                        <span class="ai-welcome-label">
+                            QUANTUM AI // ONLINE
+                        </span>
+
+                        <h3>
+                            Intelligence for the Quantum Club.
+                        </h3>
+
+                        <p>
+                            Ask questions, brainstorm ideas, explain concepts,
+                            write code, or just talk.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ai-suggestions">
+                <button class="ai-suggestion">Explain something to me</button>
+                <button class="ai-suggestion">Help me with Python</button>
+                <button class="ai-suggestion">Give me a cool idea</button>
+                <button class="ai-suggestion">Tell me something interesting</button>
+            </div>
+
+            <form class="ai-input-area" id="aiForm">
+                <div class="ai-input-wrap">
+                    <span>Q</span>
+                    <input
+                        id="aiInput"
+                        type="text"
+                        placeholder="Ask Quantum AI anything..."
+                        maxlength="4000"
+                        autocomplete="off"
+                    >
+                </div>
+
+                <button class="ai-send" type="submit">
+                    SEND
                     <span>→</span>
                 </button>
             </form>
 
-            <div class="name-security">
-                <span>●</span> LOCAL BROWSER IDENTITY
+            <div class="ai-footer">
+                <span>QUANTUM AI</span>
+                <span>SECURE BACKEND REQUIRED FOR GEMINI CONNECTION</span>
             </div>
+
+        </div>
+
+    </div>
+</section>
+
+<!-- =====================================================
+     GAMES
+===================================================== -->
+
+<section class="page" id="page-games">
+    <div class="page-inner">
+
+        <div class="window-top">
+            <div>
+                <div class="eyebrow">QUANTUM ARCADE // 001</div>
+                <h2>Quantum <span>Arcade.</span></h2>
+            </div>
+
+            <button class="back-button nav-open" data-page="home">
+                ← BACK HOME
+            </button>
+        </div>
+
+        <div class="game-container">
+
+            <div class="game-header">
+                <div>
+                    <h3>PONG</h3>
+                    <span class="game-subtitle">FIRST TO 7 WINS</span>
+                </div>
+
+                <div class="score-board">
+                    <div>
+                        <span>YOU</span>
+                        <strong id="playerScore">0</strong>
+                    </div>
+
+                    <div class="score-divider">:</div>
+
+                    <div>
+                        <span>AI</span>
+                        <strong id="aiScore">0</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="canvas-wrapper">
+                <canvas id="pongCanvas" width="900" height="500"></canvas>
+
+                <div class="game-overlay" id="gameOverlay">
+                    <div class="game-overlay-content">
+                        <div class="arcade-icon">◈</div>
+                        <h3 id="gameOverlayTitle">QUANTUM PONG</h3>
+                        <p id="gameOverlayText">
+                            First to 7 wins. Good luck.
+                        </p>
+                        <button class="btn btn-primary" id="startGame">
+                            START GAME
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-controls">
+                <span>W / S</span>
+                <span>↑ / ↓</span>
+                <span>TOUCH CONTROLS AVAILABLE</span>
+            </div>
+
+            <div class="touch-controls">
+                <button id="touchUp">▲</button>
+                <button id="touchDown">▼</button>
+            </div>
+
         </div>
     </div>
+</section>
 
+</main>
 
-    <!-- NAVIGATION -->
-    <header class="navbar">
+<!-- =====================================================
+     FOOTER
+===================================================== -->
 
-        <button class="logo nav-open" data-page="home" aria-label="Go home">
-            <span class="logo-bracket">[</span>
-            9C QUANTUM
-            <span class="logo-bracket">]</span>
-        </button>
-
-        <button class="mobile-menu" id="mobileMenu" aria-label="Open navigation">
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
-
-        <nav id="mainNav">
-
-            <button class="nav-link active" data-page="home">
-                Home
-            </button>
-
-            <button class="nav-link" data-page="boys">
-                The Boys
-            </button>
-
-            <button class="nav-link" data-page="chat">
-                Memes & Chat
-            </button>
-
-            <button class="nav-link" data-page="school">
-                H.W. & Tests
-            </button>
-
-            <button class="nav-link" data-page="games">
-                Games
-            </button>
-
-        </nav>
-
-    </header>
-
-
-    <main id="app">
-
-
-        <!-- =====================================================
-             HOME WINDOW
-        ====================================================== -->
-        <section id="page-home" class="page active-page">
-
-            <div class="page-inner home-page">
-
-                <div class="hero-content">
-
-                    <div class="status-pill">
-                        <span class="status-dot"></span>
-                        CLASS SYSTEM ONLINE
-                    </div>
-
-                    <p class="eyebrow">WELCOME TO THE</p>
-
-                    <h1 class="hero-title">
-                        <span>9C</span>
-                        <span>QUANTUM</span>
-                    </h1>
-
-                    <p class="hero-description">
-                        One class. One squad. Infinite chaos.
-                        <br>
-                        Homework, memes, memories and absolutely unnecessary competitions.
-                    </p>
-
-                    <div class="hero-user">
-                        <span class="user-dot"></span>
-                        <span>CONNECTED AS</span>
-                        <strong id="heroUserName">USER</strong>
-                    </div>
-
-                    <div class="hero-buttons">
-
-                        <button class="btn btn-primary nav-open" data-page="chat">
-                            Enter the Chat
-                            <span>→</span>
-                        </button>
-
-                        <button class="btn btn-secondary nav-open" data-page="games">
-                            Play Pong
-                        </button>
-
-                    </div>
-
-                    <div class="hero-stats">
-
-                        <div>
-                            <strong id="onlineCount">24</strong>
-                            <span>BOYS</span>
-                        </div>
-
-                        <div>
-                            <strong>∞</strong>
-                            <span>MEMES</span>
-                        </div>
-
-                        <div>
-                            <strong>01</strong>
-                            <span>SQUAD</span>
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div class="home-launch-grid">
-
-                    <button class="launch-card nav-open" data-page="boys">
-                        <span class="launch-icon">👑</span>
-                        <span class="launch-label">THE SQUAD</span>
-                        <strong>Hall of Fame</strong>
-                        <small>Meet the legends →</small>
-                    </button>
-
-                    <button class="launch-card nav-open" data-page="chat">
-                        <span class="launch-icon">💬</span>
-                        <span class="launch-label">COMMUNICATIONS</span>
-                        <strong>Memes & Chat</strong>
-                        <small>Enter the chaos →</small>
-                    </button>
-
-                    <button class="launch-card nav-open" data-page="school">
-                        <span class="launch-icon">📚</span>
-                        <span class="launch-label">MISSION CONTROL</span>
-                        <strong>H.W. & Tests</strong>
-                        <small>Check your missions →</small>
-                    </button>
-
-                    <button class="launch-card nav-open" data-page="games">
-                        <span class="launch-icon">🎮</span>
-                        <span class="launch-label">ARCADE</span>
-                        <strong>Mini Games</strong>
-                        <small>Destroy the AI →</small>
-                    </button>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- =====================================================
-             HALL OF FAME WINDOW
-        ====================================================== -->
-        <section id="page-boys" class="page">
-
-            <div class="page-inner">
-
-                <div class="window-top">
-
-                    <div>
-                        <p class="eyebrow">THE SQUAD</p>
-                        <h2>Hall of <span>Fame</span></h2>
-                    </div>
-
-                    <button class="back-button nav-open" data-page="home">
-                        ← BACK HOME
-                    </button>
-
-                </div>
-
-                <div class="section-heading-text">
-                    Add your classmates below.
-                    Replace the names, nicknames and descriptions whenever you want.
-                </div>
-
-
-                <div class="boys-grid">
-
-                    <article class="boy-card">
-                        <div class="card-number">01</div>
-
-                        <div class="avatar">
-                            <span>?</span>
-                        </div>
-
-                        <div class="boy-info">
-                            <span class="boy-role">THE LEGEND</span>
-                            <h3>Your Name</h3>
-                            <p>"Add a funny nickname here."</p>
-                        </div>
-
-                        <div class="card-glow"></div>
-                    </article>
-
-
-                    <article class="boy-card">
-                        <div class="card-number">02</div>
-
-                        <div class="avatar">
-                            <span>?</span>
-                        </div>
-
-                        <div class="boy-info">
-                            <span class="boy-role">THE GOAT</span>
-                            <h3>Your Name</h3>
-                            <p>"Add a funny nickname here."</p>
-                        </div>
-
-                        <div class="card-glow"></div>
-                    </article>
-
-
-                    <article class="boy-card">
-                        <div class="card-number">03</div>
-
-                        <div class="avatar">
-                            <span>?</span>
-                        </div>
-
-                        <div class="boy-info">
-                            <span class="boy-role">THE MENACE</span>
-                            <h3>Your Name</h3>
-                            <p>"Add a funny nickname here."</p>
-                        </div>
-
-                        <div class="card-glow"></div>
-                    </article>
-
-
-                    <article class="boy-card">
-                        <div class="card-number">04</div>
-
-                        <div class="avatar">
-                            <span>?</span>
-                        </div>
-
-                        <div class="boy-info">
-                            <span class="boy-role">THE NPC</span>
-                            <h3>Your Name</h3>
-                            <p>"Add a funny nickname here."</p>
-                        </div>
-
-                        <div class="card-glow"></div>
-                    </article>
-
-
-                    <article class="boy-card">
-                        <div class="card-number">05</div>
-
-                        <div class="avatar">
-                            <span>?</span>
-                        </div>
-
-                        <div class="boy-info">
-                            <span class="boy-role">THE GRINDER</span>
-                            <h3>Your Name</h3>
-                            <p>"Add a funny nickname here."</p>
-                        </div>
-
-                        <div class="card-glow"></div>
-                    </article>
-
-
-                    <article class="boy-card">
-                        <div class="card-number">06</div>
-
-                        <div class="avatar">
-                            <span>?</span>
-                        </div>
-
-                        <div class="boy-info">
-                            <span class="boy-role">THE CHAOS</span>
-                            <h3>Your Name</h3>
-                            <p>"Add a funny nickname here."</p>
-                        </div>
-
-                        <div class="card-glow"></div>
-                    </article>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- =====================================================
-             CHAT WINDOW
-        ====================================================== -->
-        <section id="page-chat" class="page">
-
-            <div class="page-inner">
-
-                <div class="window-top">
-
-                    <div>
-                        <p class="eyebrow">COMMUNICATIONS</p>
-                        <h2>Memes <span>& Chat</span></h2>
-                    </div>
-
-                    <button class="back-button nav-open" data-page="home">
-                        ← BACK HOME
-                    </button>
-
-                </div>
-
-
-                <div class="chat-wrapper">
-
-                    <div class="chat-header">
-
-                        <div class="chat-title">
-
-                            <div class="group-avatar">9Q</div>
-
-                            <div>
-                                <h3>The Boys</h3>
-
-                                <span>
-                                    <i class="online-indicator"></i>
-                                    <span id="chatStatus">24 members online</span>
-                                </span>
-                            </div>
-
-                        </div>
-
-                        <div class="chat-actions">
-                            <button title="Search">⌕</button>
-                            <button title="More">•••</button>
-                        </div>
-
-                    </div>
-
-
-                    <div class="messages" id="messages">
-
-                        <div class="date-divider">
-                            <span>TODAY</span>
-                        </div>
-
-                        <div class="system-message">
-                            <span>⚡</span>
-                            Welcome to The Boys chat.
-                        </div>
-
-                        <div class="message received">
-
-                            <div class="message-avatar">A</div>
-
-                            <div>
-                                <span class="message-name">Ahmed</span>
-
-                                <div class="bubble">
-                                    Bro who has the physics homework 💀
-                                </div>
-
-                                <span class="message-time">18:42</span>
-                            </div>
-
-                        </div>
-
-
-                        <div class="message received">
-
-                            <div class="message-avatar">M</div>
-
-                            <div>
-                                <span class="message-name">Moiz</span>
-
-                                <div class="bubble">
-                                    bro we are finished 😭
-                                </div>
-
-                                <span class="message-time">18:43</span>
-                            </div>
-
-                        </div>
-
-
-                        <div class="message sent">
-
-                            <div>
-
-                                <span class="message-name sent-name">
-                                    You
-                                </span>
-
-                                <div class="bubble">
-                                    I'll put it in the homework section 😂
-                                </div>
-
-                                <span class="message-time">18:44</span>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="typing-indicator" id="typingIndicator">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                        Someone is typing...
-                    </div>
-
-
-                    <div class="chat-input-area">
-
-                        <input
-                            type="file"
-                            id="memeInput"
-                            accept="image/*"
-                            hidden
-                        >
-
-                        <button
-                            class="chat-tool"
-                            id="uploadButton"
-                            title="Upload Meme"
-                        >
-                            ＋
-                        </button>
-
-                        <button
-                            class="chat-tool"
-                            id="voiceButton"
-                            title="Voice Note"
-                        >
-                            🎙
-                        </button>
-
-                        <input
-                            type="text"
-                            id="messageInput"
-                            placeholder="Type something..."
-                            autocomplete="off"
-                        >
-
-                        <button
-                            class="send-button"
-                            id="sendButton"
-                        >
-                            ➤
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- =====================================================
-             SCHOOL WINDOW
-        ====================================================== -->
-        <section id="page-school" class="page">
-
-            <div class="page-inner">
-
-                <div class="window-top">
-
-                    <div>
-                        <p class="eyebrow">MISSION CONTROL</p>
-                        <h2>H.W. <span>& Tests</span></h2>
-                    </div>
-
-                    <button class="back-button nav-open" data-page="home">
-                        ← BACK HOME
-                    </button>
-
-                </div>
-
-
-                <div class="countdown-card">
-
-                    <div class="countdown-content">
-
-                        <div>
-                            <span class="countdown-label">
-                                NEXT BIG EVENT
-                            </span>
-
-                            <h3 id="countdownTitle">
-                                Next Physics Test
-                            </h3>
-
-                            <p id="countdownDate">
-                                Loading event...
-                            </p>
-                        </div>
-
-
-                        <div class="countdown-timer">
-
-                            <div class="time-box">
-                                <strong id="days">00</strong>
-                                <span>DAYS</span>
-                            </div>
-
-                            <div class="time-separator">:</div>
-
-                            <div class="time-box">
-                                <strong id="hours">00</strong>
-                                <span>HOURS</span>
-                            </div>
-
-                            <div class="time-separator">:</div>
-
-                            <div class="time-box">
-                                <strong id="minutes">00</strong>
-                                <span>MIN</span>
-                            </div>
-
-                            <div class="time-separator">:</div>
-
-                            <div class="time-box">
-                                <strong id="seconds">00</strong>
-                                <span>SEC</span>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <div class="school-grid">
-
-                    <div class="dashboard-card">
-
-                        <div class="dashboard-header">
-
-                            <div>
-                                <span class="eyebrow">CURRENT TASKS</span>
-                                <h3>Active Homework</h3>
-                            </div>
-
-                            <span class="task-count">3 TASKS</span>
-
-                        </div>
-
-
-                        <div class="task-list">
-
-                            <div class="task-item">
-
-                                <div class="task-icon physics">
-                                    PHY
-                                </div>
-
-                                <div class="task-details">
-                                    <h4>Physics — Electricity</h4>
-                                    <p>Complete questions 1–10</p>
-                                </div>
-
-                                <span class="due urgent">
-                                    TOMORROW
-                                </span>
-
-                            </div>
-
-
-                            <div class="task-item">
-
-                                <div class="task-icon chemistry">
-                                    CHEM
-                                </div>
-
-                                <div class="task-details">
-                                    <h4>Chemistry — Acids</h4>
-                                    <p>Finish worksheet</p>
-                                </div>
-
-                                <span class="due">
-                                    28 SEP
-                                </span>
-
-                            </div>
-
-
-                            <div class="task-item">
-
-                                <div class="task-icon cs">
-                                    CS
-                                </div>
-
-                                <div class="task-details">
-                                    <h4>Computer Science</h4>
-                                    <p>Programming exercise</p>
-                                </div>
-
-                                <span class="due">
-                                    30 SEP
-                                </span>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="dashboard-card">
-
-                        <div class="dashboard-header">
-
-                            <div>
-                                <span class="eyebrow">UPCOMING</span>
-                                <h3>Tests & Exams</h3>
-                            </div>
-
-                            <span class="task-count">3 TESTS</span>
-
-                        </div>
-
-
-                        <div class="test-list">
-
-                            <div class="test-item">
-
-                                <div class="test-date">
-                                    <strong>30</strong>
-                                    <span>SEP</span>
-                                </div>
-
-                                <div class="test-details">
-                                    <h4>Physics</h4>
-                                    <p>Electricity & Circuits</p>
-                                </div>
-
-                                <span class="test-arrow">→</span>
-
-                            </div>
-
-
-                            <div class="test-item">
-
-                                <div class="test-date">
-                                    <strong>03</strong>
-                                    <span>OCT</span>
-                                </div>
-
-                                <div class="test-details">
-                                    <h4>Chemistry</h4>
-                                    <p>Acids, Bases & Salts</p>
-                                </div>
-
-                                <span class="test-arrow">→</span>
-
-                            </div>
-
-
-                            <div class="test-item">
-
-                                <div class="test-date">
-                                    <strong>07</strong>
-                                    <span>OCT</span>
-                                </div>
-
-                                <div class="test-details">
-                                    <h4>Computer Science</h4>
-                                    <p>Programming Fundamentals</p>
-                                </div>
-
-                                <span class="test-arrow">→</span>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- =====================================================
-             GAMES WINDOW
-        ====================================================== -->
-        <section id="page-games" class="page">
-
-            <div class="page-inner">
-
-                <div class="window-top">
-
-                    <div>
-                        <p class="eyebrow">ARCADE</p>
-                        <h2>Mini <span>Games</span></h2>
-                    </div>
-
-                    <button class="back-button nav-open" data-page="home">
-                        ← BACK HOME
-                    </button>
-
-                </div>
-
-
-                <div class="game-container">
-
-                    <div class="game-header">
-
-                        <div>
-                            <span class="eyebrow">CLASSIC ARCADE</span>
-                            <h3>PONG</h3>
-                        </div>
-
-
-                        <div class="score-board">
-
-                            <div>
-                                <span>PLAYER</span>
-                                <strong id="playerScore">0</strong>
-                            </div>
-
-                            <div class="score-divider">:</div>
-
-                            <div>
-                                <span>AI</span>
-                                <strong id="aiScore">0</strong>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="canvas-wrapper">
-
-                        <canvas
-                            id="pongCanvas"
-                            width="900"
-                            height="500"
-                        ></canvas>
-
-
-                        <div
-                            class="game-overlay"
-                            id="gameOverlay"
-                        >
-
-                            <div class="game-overlay-content">
-
-                                <div class="arcade-icon">◈</div>
-
-                                <h3>READY?</h3>
-
-                                <p>
-                                    Use <kbd>W</kbd>
-                                    <kbd>S</kbd>
-                                    or
-                                    <kbd>↑</kbd>
-                                    <kbd>↓</kbd>
-                                </p>
-
-                                <button
-                                    class="btn btn-primary"
-                                    id="startGame"
-                                >
-                                    Start Game
-                                </button>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="game-controls">
-
-                        <span>
-                            <kbd>W</kbd>
-                            <kbd>↑</kbd>
-                            MOVE UP
-                        </span>
-
-                        <span>
-                            <kbd>S</kbd>
-                            <kbd>↓</kbd>
-                            MOVE DOWN
-                        </span>
-
-                        <span>
-                            FIRST TO 7 WINS
-                        </span>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </section>
-
-    </main>
-
-
-    <!-- FOOTER -->
-
-    <footer>
-
-        <div class="footer-logo">
-            <span>[</span>
-            9C QUANTUM
-            <span>]</span>
-        </div>
-
-        <p>
-            Built for the squad. Powered by questionable decisions.
-        </p>
-
-        <span class="footer-status">
-            ● SYSTEM ONLINE
+<footer>
+    <div>
+        <span class="footer-logo">
+            <span>[</span>9C QUANTUM<span>]</span>
         </span>
-
-    </footer>
-
-
-    <!-- TOAST -->
-
-    <div
-        class="toast"
-        id="toast"
-        aria-live="polite"
-    >
-        <span id="toastIcon">✓</span>
-        <span id="toastMessage">Done!</span>
+        — built for the boys.
     </div>
 
+    <div class="footer-status">
+        ● QUANTUM NETWORK
+    </div>
+</footer>
 
-    <script src="script.js"></script>
+<!-- =====================================================
+     TOAST
+===================================================== -->
+
+<div class="toast" id="toast">
+    <span id="toastIcon">✦</span>
+    <span id="toastMessage"></span>
+</div>
+
+<script src="script.js"></script>
 
 </body>
 </html>
