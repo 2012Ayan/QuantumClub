@@ -1,144 +1,245 @@
-/* =========================================================
-   9C QUANTUM — MAIN SYSTEM
-========================================================= */
-
 document.addEventListener("DOMContentLoaded", () => {
+    "use strict";
 
     /* =====================================================
-       NAME / IDENTITY SYSTEM
-    ====================================================== */
+       QUANTUM CLUB MEMBERS
+    ===================================================== */
+
+    const MEMBERS = [
+        "Ayan Ahmed",
+        "Mohsin Kabeer",
+        "Azan Zaheer",
+        "Mallahat Shehzad",
+        "Tayyab Ghuman",
+        "Sufi Ur Rehman",
+        "Ubaid Rizwan",
+        "Salahudin Qamr",
+        "Saad Afzal",
+        "Talha Jameel",
+        "Abdullah Mozam",
+        "Abdullah Qadir",
+        "Aarib Yaseen",
+        "Huzaifa Mubarik"
+    ];
+
+    const RETIRED_MEMBERS = [
+        "Ahmed Anwar"
+    ];
+
+    const APPROVED_MEMBERS = [
+        ...MEMBERS,
+        ...RETIRED_MEMBERS
+    ];
 
     const NAME_KEY = "quantum_user_name";
+
+    const normalizeName = (name) => {
+        return String(name || "")
+            .trim()
+            .replace(/\s+/g, " ")
+            .toLowerCase();
+    };
+
+    const findApprovedMember = (name) => {
+        const normalized = normalizeName(name);
+
+        return APPROVED_MEMBERS.find(
+            member => normalizeName(member) === normalized
+        ) || null;
+    };
+
+    /* =====================================================
+       DOM
+    ===================================================== */
+
+    const body = document.body;
 
     const nameScreen = document.getElementById("nameScreen");
     const nameForm = document.getElementById("nameForm");
     const nameInput = document.getElementById("nameInput");
+
+    const rejectionScreen = document.getElementById("rejectionScreen");
+    const rejectionName = document.getElementById("rejectionName");
+    const retryAccess = document.getElementById("retryAccess");
+
     const heroUserName = document.getElementById("heroUserName");
 
-    let userName = localStorage.getItem(NAME_KEY) || "";
+    const pages = document.querySelectorAll(".page");
+    const navLinks = document.querySelectorAll(".nav-link");
+    const pageButtons = document.querySelectorAll(".nav-open");
 
-    const updateUserNameUI = () => {
-        if (heroUserName) {
-            heroUserName.textContent = userName || "USER";
-        }
+    const mainNav = document.getElementById("mainNav");
+    const mobileMenu = document.getElementById("mobileMenu");
 
-        document.querySelectorAll(".sent-name").forEach((element) => {
-            element.textContent = userName || "You";
-        });
+    const toast = document.getElementById("toast");
+    const toastIcon = document.getElementById("toastIcon");
+    const toastMessage = document.getElementById("toastMessage");
+
+    /* =====================================================
+       TOAST
+    ===================================================== */
+
+    let toastTimer = null;
+
+    const showToast = (message, icon = "✦") => {
+        if (!toast || !toastMessage) return;
+
+        toastMessage.textContent = message;
+        toastIcon.textContent = icon;
+
+        toast.classList.add("show");
+
+        clearTimeout(toastTimer);
+
+        toastTimer = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2800);
     };
 
-    const unlockWebsite = () => {
+    /* =====================================================
+       ACCESS GATE
+    ===================================================== */
+
+    const unlockSite = (memberName) => {
+        const approved = findApprovedMember(memberName);
+
+        if (!approved) {
+            return false;
+        }
+
+        localStorage.setItem(NAME_KEY, approved);
+
+        if (heroUserName) {
+            heroUserName.textContent = approved.toUpperCase();
+        }
+
+        body.classList.remove("locked");
+
         if (nameScreen) {
             nameScreen.classList.add("hidden");
         }
 
-        document.body.classList.remove("locked");
+        if (rejectionScreen) {
+            rejectionScreen.classList.remove("show");
+        }
 
-        updateUserNameUI();
+        return true;
     };
 
-    if (userName) {
-        unlockWebsite();
+    const rejectUser = (enteredName) => {
+        localStorage.removeItem(NAME_KEY);
+
+        if (rejectionName) {
+            rejectionName.textContent =
+                `${String(enteredName || "UNKNOWN").toUpperCase()} // IDENTITY NOT RECOGNIZED`;
+        }
+
+        if (nameScreen) {
+            nameScreen.classList.add("hidden");
+        }
+
+        if (rejectionScreen) {
+            rejectionScreen.classList.add("show");
+        }
+
+        body.classList.add("locked");
+
+        /* Dramatic vibration on supported phones */
+        if (navigator.vibrate) {
+            navigator.vibrate([120, 60, 180, 60, 250]);
+        }
+
+        /* Small browser voice effect when speech synthesis is available */
+        if ("speechSynthesis" in window) {
+            try {
+                window.speechSynthesis.cancel();
+
+                const voice = new SpeechSynthesisUtterance(
+                    "You are not part of Quantum Club. Go away."
+                );
+
+                voice.rate = 0.82;
+                voice.pitch = 0.35;
+                voice.volume = 1;
+
+                window.speechSynthesis.speak(voice);
+            } catch (error) {
+                /* Speech is optional. */
+            }
+        }
+    };
+
+    nameForm?.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        const enteredName = nameInput.value.trim();
+
+        if (!enteredName) {
+            showToast("ENTER YOUR NAME FIRST.", "!");
+            return;
+        }
+
+        const approved = findApprovedMember(enteredName);
+
+        if (approved) {
+            unlockSite(approved);
+            showToast(`ACCESS GRANTED — ${approved}`, "✓");
+        } else {
+            rejectUser(enteredName);
+        }
+    });
+
+    retryAccess?.addEventListener("click", () => {
+        rejectionScreen?.classList.remove("show");
+        nameScreen?.classList.remove("hidden");
+
+        setTimeout(() => {
+            nameInput?.focus();
+            nameInput?.select();
+        }, 200);
+    });
+
+    /* =====================================================
+       REMEMBERED IDENTITY
+    ===================================================== */
+
+    const savedName = localStorage.getItem(NAME_KEY);
+
+    if (savedName && findApprovedMember(savedName)) {
+        unlockSite(savedName);
     } else {
-        document.body.classList.add("locked");
+        localStorage.removeItem(NAME_KEY);
+
+        body.classList.add("locked");
 
         setTimeout(() => {
             nameInput?.focus();
         }, 400);
     }
 
-    if (nameForm) {
-        nameForm.addEventListener("submit", (event) => {
-            event.preventDefault();
+    /* =====================================================
+       PAGE NAVIGATION
+    ===================================================== */
 
-            const enteredName = nameInput?.value.trim();
+    const openPage = (pageName, updateHistory = true) => {
+        const target = document.getElementById(`page-${pageName}`);
 
-            if (!enteredName) {
-                showToast("Enter your name first", "!");
-                nameInput?.focus();
-                return;
-            }
+        if (!target) return;
 
-            userName = enteredName.slice(0, 24);
-
-            localStorage.setItem(NAME_KEY, userName);
-
-            unlockWebsite();
-
-            showToast(`Welcome, ${userName}`, "✓", 2200);
+        pages.forEach(page => {
+            page.classList.remove("active-page");
         });
-    }
 
-
-    /* =====================================================
-       TOAST
-    ====================================================== */
-
-    const showToast = (
-        message,
-        icon = "✓",
-        duration = 1800
-    ) => {
-
-        const toast = document.getElementById("toast");
-        const toastMessage = document.getElementById("toastMessage");
-        const toastIcon = document.getElementById("toastIcon");
-
-        if (!toast || !toastMessage || !toastIcon) {
-            return;
-        }
-
-        toastIcon.textContent = icon;
-        toastMessage.textContent = message;
-
-        toast.classList.add("show");
-
-        window.clearTimeout(showToast.timeoutId);
-
-        showToast.timeoutId = window.setTimeout(() => {
-            toast.classList.remove("show");
-        }, duration);
-    };
-
-
-    /* =====================================================
-       PAGE / WINDOW SYSTEM
-    ====================================================== */
-
-    const pages = Array.from(document.querySelectorAll(".page"));
-    const navLinks = Array.from(document.querySelectorAll(".nav-link"));
-    const pageButtons = Array.from(document.querySelectorAll(".nav-open"));
-
-    let currentPage = "home";
-
-    const setActiveNav = (pageName) => {
-
-        navLinks.forEach((link) => {
+        navLinks.forEach(link => {
             link.classList.toggle(
                 "active",
                 link.dataset.page === pageName
             );
         });
-    };
 
-    const openPage = (pageName, updateHistory = true) => {
+        target.classList.add("active-page");
 
-        const target = document.getElementById(`page-${pageName}`);
-
-        if (!target) {
-            return;
-        }
-
-        pages.forEach((page) => {
-            page.classList.toggle(
-                "active-page",
-                page === target
-            );
-        });
-
-        currentPage = pageName;
-
-        setActiveNav(pageName);
+        mainNav?.classList.remove("open");
 
         window.scrollTo({
             top: 0,
@@ -147,1090 +248,1317 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (updateHistory) {
             history.replaceState(
-                { page: pageName },
+                null,
                 "",
                 `#${pageName}`
             );
         }
-
-        const nav = document.getElementById("mainNav");
-        const mobileMenu = document.getElementById("mobileMenu");
-
-        nav?.classList.remove("open");
-
-        mobileMenu?.setAttribute(
-            "aria-expanded",
-            "false"
-        );
     };
 
-    pageButtons.forEach((button) => {
+    pageButtons.forEach(button => {
         button.addEventListener("click", () => {
             openPage(button.dataset.page);
         });
     });
 
-    navLinks.forEach((link) => {
+    navLinks.forEach(link => {
         link.addEventListener("click", () => {
             openPage(link.dataset.page);
         });
     });
 
-    const initialPage =
-        window.location.hash.replace("#", "") || "home";
+    mobileMenu?.addEventListener("click", () => {
+        mainNav?.classList.toggle("open");
+    });
 
-    if (document.getElementById(`page-${initialPage}`)) {
+    document.addEventListener("click", (event) => {
+        if (
+            mainNav &&
+            mobileMenu &&
+            !mainNav.contains(event.target) &&
+            !mobileMenu.contains(event.target)
+        ) {
+            mainNav.classList.remove("open");
+        }
+    });
+
+    const initialPage = location.hash
+        .replace("#", "")
+        .trim();
+
+    if (initialPage && document.getElementById(`page-${initialPage}`)) {
         openPage(initialPage, false);
     } else {
         openPage("home", false);
     }
 
+    window.addEventListener("hashchange", () => {
+        const page = location.hash.replace("#", "").trim();
 
-    /* =====================================================
-       MOBILE NAVIGATION
-    ====================================================== */
-
-    const mobileMenu = document.getElementById("mobileMenu");
-    const mainNav = document.getElementById("mainNav");
-
-    if (mobileMenu && mainNav) {
-
-        mobileMenu.addEventListener("click", () => {
-
-            const open =
-                mainNav.classList.toggle("open");
-
-            mobileMenu.setAttribute(
-                "aria-expanded",
-                String(open)
-            );
-        });
-    }
-
-
-    /* =====================================================
-       ONLINE COUNT
-    ====================================================== */
-
-    const onlineCount =
-        document.getElementById("onlineCount");
-
-    const chatStatus =
-        document.getElementById("chatStatus");
-
-    const updateOnlineCount = () => {
-
-        const count =
-            Math.floor(21 + Math.random() * 6);
-
-        if (onlineCount) {
-            onlineCount.textContent = count;
+        if (document.getElementById(`page-${page}`)) {
+            openPage(page, false);
         }
-
-        if (chatStatus) {
-            chatStatus.textContent =
-                `${count} members online`;
-        }
-    };
-
-    updateOnlineCount();
-
-    window.setInterval(
-        updateOnlineCount,
-        7000
-    );
-
-
-    /* =====================================================
-       COUNTDOWN
-    ====================================================== */
-
-    const daysEl =
-        document.getElementById("days");
-
-    const hoursEl =
-        document.getElementById("hours");
-
-    const minutesEl =
-        document.getElementById("minutes");
-
-    const secondsEl =
-        document.getElementById("seconds");
-
-    const countdownTitle =
-        document.getElementById("countdownTitle");
-
-    const countdownDate =
-        document.getElementById("countdownDate");
-
-    if (
-        daysEl &&
-        hoursEl &&
-        minutesEl &&
-        secondsEl
-    ) {
-
-        const deadline = new Date();
-
-        deadline.setDate(
-            deadline.getDate() + 8
-        );
-
-        deadline.setHours(
-            17,
-            0,
-            0,
-            0
-        );
-
-        const formatValue = (value) =>
-            String(value).padStart(2, "0");
-
-        const updateCountdown = () => {
-
-            const now = new Date();
-
-            const distance =
-                deadline - now;
-
-            if (distance <= 0) {
-
-                daysEl.textContent = "00";
-                hoursEl.textContent = "00";
-                minutesEl.textContent = "00";
-                secondsEl.textContent = "00";
-
-                if (countdownTitle) {
-                    countdownTitle.textContent =
-                        "Next Physics Test";
-                }
-
-                if (countdownDate) {
-                    countdownDate.textContent =
-                        "Exam window opened";
-                }
-
-                return;
-            }
-
-            const totalSeconds =
-                Math.floor(distance / 1000);
-
-            const days =
-                Math.floor(
-                    totalSeconds / 86400
-                );
-
-            const hours =
-                Math.floor(
-                    (totalSeconds % 86400) / 3600
-                );
-
-            const minutes =
-                Math.floor(
-                    (totalSeconds % 3600) / 60
-                );
-
-            const seconds =
-                totalSeconds % 60;
-
-            daysEl.textContent =
-                formatValue(days);
-
-            hoursEl.textContent =
-                formatValue(hours);
-
-            minutesEl.textContent =
-                formatValue(minutes);
-
-            secondsEl.textContent =
-                formatValue(seconds);
-
-            if (countdownDate) {
-
-                countdownDate.textContent =
-                    deadline.toLocaleDateString(
-                        "en-GB",
-                        {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric"
-                        }
-                    ) + " • 5:00 PM";
-            }
-        };
-
-        updateCountdown();
-
-        window.setInterval(
-            updateCountdown,
-            1000
-        );
-    }
-
+    });
 
     /* =====================================================
        CHAT
-    ====================================================== */
+    ===================================================== */
 
-    const messageInput =
-        document.getElementById("messageInput");
+    const chatForm = document.getElementById("chatForm");
+    const messages = document.getElementById("messages");
+    const messageInput = document.getElementById("messageInput");
 
-    const messages =
-        document.getElementById("messages");
+    const memeInput = document.getElementById("memeInput");
+    const uploadButton = document.getElementById("uploadButton");
 
-    const sendButton =
-        document.getElementById("sendButton");
+    const voiceButton = document.getElementById("voiceButton");
 
-    const uploadButton =
-        document.getElementById("uploadButton");
+    const typingIndicator = document.getElementById("typingIndicator");
 
-    const memeInput =
-        document.getElementById("memeInput");
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordingStream = null;
 
-    const voiceButton =
-        document.getElementById("voiceButton");
-
-    const typingIndicator =
-        document.getElementById("typingIndicator");
-
+    let typingTimeout = null;
 
     const escapeHTML = (value) => {
-
-        const div =
-            document.createElement("div");
-
-        div.textContent = value;
-
+        const div = document.createElement("div");
+        div.textContent = String(value);
         return div.innerHTML;
     };
 
-
     const getTime = () => {
-
-        return new Date().toLocaleTimeString(
-            [],
-            {
-                hour: "2-digit",
-                minute: "2-digit"
-            }
-        );
+        return new Intl.DateTimeFormat([], {
+            hour: "numeric",
+            minute: "2-digit"
+        }).format(new Date());
     };
 
+    const getInitials = (name) => {
+        return name
+            .split(" ")
+            .map(part => part[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase();
+    };
 
-    const createWaveform = () => {
+    const removeEmptyState = () => {
+        const empty = messages?.querySelector(".chat-empty");
 
-        return `
-            <div class="voice-message">
-                <div class="play-icon">▶</div>
+        if (empty) {
+            empty.remove();
+        }
+    };
 
-                <div class="waveform">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
+    const scrollChatToBottom = () => {
+        if (!messages) return;
 
-                <small>0:08</small>
+        requestAnimationFrame(() => {
+            messages.scrollTop = messages.scrollHeight;
+        });
+    };
+
+    const appendMessage = ({
+        text = "",
+        imageURL = null,
+        audioURL = null,
+        sent = true
+    }) => {
+        if (!messages) return;
+
+        removeEmptyState();
+
+        const currentName =
+            localStorage.getItem(NAME_KEY) || "Quantum Member";
+
+        const wrapper = document.createElement("div");
+
+        wrapper.className = `message ${sent ? "sent" : ""}`;
+
+        const safeName = escapeHTML(currentName);
+
+        const initials = getInitials(currentName);
+
+        const avatar = `
+            <div class="message-avatar">
+                ${escapeHTML(initials)}
             </div>
         `;
-    };
 
+        let content = "";
 
-    const appendTextMessage = (text) => {
-
-        if (!messages) {
-            return;
-        }
-
-        const safeText =
-            escapeHTML(text);
-
-        const safeName =
-            escapeHTML(userName || "You");
-
-        const element =
-            document.createElement("div");
-
-        element.className =
-            "message sent";
-
-        element.innerHTML = `
-            <div>
-
-                <span class="message-name sent-name">
-                    ${safeName}
-                </span>
-
+        if (text) {
+            content += `
                 <div class="bubble">
-                    ${safeText}
+                    ${escapeHTML(text)}
                 </div>
-
-                <span class="message-time">
-                    ${getTime()}
-                </span>
-
-            </div>
-        `;
-
-        messages.appendChild(element);
-
-        messages.scrollTop =
-            messages.scrollHeight;
-    };
-
-
-    const appendImageMessage = (imageData) => {
-
-        if (!messages) {
-            return;
+            `;
         }
 
-        const safeName =
-            escapeHTML(userName || "You");
-
-        const element =
-            document.createElement("div");
-
-        element.className =
-            "message sent";
-
-        element.innerHTML = `
-            <div>
-
-                <span class="message-name sent-name">
-                    ${safeName}
-                </span>
-
+        if (imageURL) {
+            content += `
                 <div class="bubble">
-                    Shared a meme 🖼️
+                    <img
+                        class="message-image"
+                        src="${imageURL}"
+                        alt="Uploaded meme"
+                    >
                 </div>
-
-                <img
-                    class="message-image"
-                    src="${imageData}"
-                    alt="${safeName} shared meme"
-                >
-
-                <span class="message-time">
-                    ${getTime()}
-                </span>
-
-            </div>
-        `;
-
-        messages.appendChild(element);
-
-        messages.scrollTop =
-            messages.scrollHeight;
-    };
-
-
-    const appendVoiceMessage = () => {
-
-        if (!messages) {
-            return;
+            `;
         }
 
-        const safeName =
-            escapeHTML(userName || "You");
-
-        const element =
-            document.createElement("div");
-
-        element.className =
-            "message sent";
-
-        element.innerHTML = `
-            <div>
-
-                <span class="message-name sent-name">
-                    ${safeName}
-                </span>
-
+        if (audioURL) {
+            content += `
                 <div class="bubble">
-                    ${createWaveform()}
+                    <audio
+                        class="audio-message"
+                        controls
+                        preload="metadata"
+                        src="${audioURL}"
+                    ></audio>
                 </div>
+            `;
+        }
 
-                <span class="message-time">
-                    ${getTime()}
-                </span>
+        content += `
+            <span class="message-time">${getTime()}</span>
+        `;
 
+        const bodyHTML = `
+            <div class="message-content">
+                <span class="message-name">${safeName}</span>
+                ${content}
             </div>
         `;
 
-        messages.appendChild(element);
+        wrapper.innerHTML = sent
+            ? bodyHTML
+            : avatar + bodyHTML;
 
-        messages.scrollTop =
-            messages.scrollHeight;
+        messages.appendChild(wrapper);
+
+        scrollChatToBottom();
     };
 
+    chatForm?.addEventListener("submit", (event) => {
+        event.preventDefault();
 
-    const sendMessage = () => {
+        const value = messageInput.value.trim();
 
-        if (!messageInput) {
-            return;
-        }
+        if (!value) return;
 
-        const text =
-            messageInput.value.trim();
-
-        if (!text) {
-            return;
-        }
-
-        appendTextMessage(text);
+        appendMessage({
+            text: value,
+            sent: true
+        });
 
         messageInput.value = "";
 
-        if (typingIndicator) {
+        typingIndicator?.classList.remove("show");
+
+        clearTimeout(typingTimeout);
+    });
+
+    messageInput?.addEventListener("input", () => {
+        if (!typingIndicator) return;
+
+        typingIndicator.classList.add("show");
+
+        clearTimeout(typingTimeout);
+
+        typingTimeout = setTimeout(() => {
             typingIndicator.classList.remove("show");
+        }, 700);
+    });
+
+    messageInput?.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+
+            chatForm?.requestSubmit();
         }
-
-        showToast("Message sent", "✓");
-    };
-
-
-    sendButton?.addEventListener(
-        "click",
-        sendMessage
-    );
-
-
-    messageInput?.addEventListener(
-        "keydown",
-        (event) => {
-
-            if (event.key === "Enter") {
-
-                event.preventDefault();
-
-                sendMessage();
-            }
-        }
-    );
-
-
-    messageInput?.addEventListener(
-        "input",
-        () => {
-
-            if (!typingIndicator) {
-                return;
-            }
-
-            typingIndicator.classList.toggle(
-                "show",
-                messageInput.value.trim().length > 0
-            );
-        }
-    );
-
+    });
 
     /* =====================================================
        MEME UPLOAD
-    ====================================================== */
+    ===================================================== */
 
-    uploadButton?.addEventListener(
-        "click",
-        () => memeInput?.click()
-    );
+    uploadButton?.addEventListener("click", () => {
+        memeInput?.click();
+    });
 
+    memeInput?.addEventListener("change", () => {
+        const file = memeInput.files?.[0];
 
-    memeInput?.addEventListener(
-        "change",
-        (event) => {
+        if (!file) return;
 
-            const file =
-                event.target.files?.[0];
-
-            if (!file) {
-                return;
-            }
-
-            if (!file.type.startsWith("image/")) {
-
-                showToast(
-                    "Please choose an image",
-                    "!"
-                );
-
-                return;
-            }
-
-            const reader =
-                new FileReader();
-
-            reader.onload =
-                (loadEvent) => {
-
-                    appendImageMessage(
-                        loadEvent.target?.result
-                    );
-
-                    showToast(
-                        "Meme uploaded",
-                        "✓"
-                    );
-                };
-
-            reader.readAsDataURL(file);
-
+        if (!file.type.startsWith("image/")) {
+            showToast("PLEASE SELECT AN IMAGE.", "!");
             memeInput.value = "";
+            return;
         }
-    );
 
+        if (file.size > 8 * 1024 * 1024) {
+            showToast("IMAGE MUST BE UNDER 8MB.", "!");
+            memeInput.value = "";
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = () => {
+            appendMessage({
+                imageURL: reader.result,
+                sent: true
+            });
+
+            showToast("MEME ATTACHED.", "◈");
+        };
+
+        reader.onerror = () => {
+            showToast("COULDN'T READ THAT IMAGE.", "!");
+        };
+
+        reader.readAsDataURL(file);
+
+        memeInput.value = "";
+    });
 
     /* =====================================================
-       VOICE NOTE SIMULATION
-    ====================================================== */
+       REAL VOICE NOTES
+    ===================================================== */
 
-    voiceButton?.addEventListener(
-        "click",
-        () => {
+    const stopRecording = () => {
+        if (
+            mediaRecorder &&
+            mediaRecorder.state !== "inactive"
+        ) {
+            mediaRecorder.stop();
+        }
+    };
 
-            appendVoiceMessage();
+    const cleanupRecordingStream = () => {
+        if (!recordingStream) return;
+
+        recordingStream
+            .getTracks()
+            .forEach(track => track.stop());
+
+        recordingStream = null;
+    };
+
+    const startRecording = async () => {
+        if (
+            !navigator.mediaDevices ||
+            !navigator.mediaDevices.getUserMedia
+        ) {
+            showToast(
+                "YOUR BROWSER DOES NOT SUPPORT MICROPHONE RECORDING.",
+                "!"
+            );
+            return;
+        }
+
+        try {
+            recordingStream =
+                await navigator.mediaDevices.getUserMedia({
+                    audio: true
+                });
+
+            let mimeType = "";
+
+            const possibleTypes = [
+                "audio/webm;codecs=opus",
+                "audio/webm",
+                "audio/ogg;codecs=opus",
+                "audio/mp4"
+            ];
+
+            for (const type of possibleTypes) {
+                if (
+                    typeof MediaRecorder !== "undefined" &&
+                    MediaRecorder.isTypeSupported &&
+                    MediaRecorder.isTypeSupported(type)
+                ) {
+                    mimeType = type;
+                    break;
+                }
+            }
+
+            mediaRecorder = mimeType
+                ? new MediaRecorder(
+                    recordingStream,
+                    { mimeType }
+                )
+                : new MediaRecorder(recordingStream);
+
+            audioChunks = [];
+
+            mediaRecorder.addEventListener(
+                "dataavailable",
+                event => {
+                    if (event.data && event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                }
+            );
+
+            mediaRecorder.addEventListener(
+                "stop",
+                () => {
+                    const finalType =
+                        mediaRecorder.mimeType ||
+                        mimeType ||
+                        "audio/webm";
+
+                    const blob = new Blob(
+                        audioChunks,
+                        { type: finalType }
+                    );
+
+                    if (!blob.size) {
+                        showToast("NO AUDIO WAS RECORDED.", "!");
+                        cleanupRecordingStream();
+                        return;
+                    }
+
+                    const audioURL =
+                        URL.createObjectURL(blob);
+
+                    appendMessage({
+                        audioURL,
+                        sent: true
+                    });
+
+                    showToast(
+                        "VOICE NOTE RECORDED.",
+                        "🎙"
+                    );
+
+                    cleanupRecordingStream();
+
+                    audioChunks = [];
+                    mediaRecorder = null;
+                }
+            );
+
+            mediaRecorder.addEventListener(
+                "error",
+                () => {
+                    showToast(
+                        "RECORDING ERROR.",
+                        "!"
+                    );
+
+                    cleanupRecordingStream();
+                    mediaRecorder = null;
+                    audioChunks = [];
+
+                    voiceButton?.classList.remove(
+                        "voice-recording"
+                    );
+
+                    if (voiceButton) {
+                        voiceButton.textContent = "🎙";
+                    }
+                }
+            );
+
+            mediaRecorder.start();
+
+            voiceButton?.classList.add(
+                "voice-recording"
+            );
+
+            if (voiceButton) {
+                voiceButton.textContent = "■";
+                voiceButton.title = "Stop recording";
+            }
 
             showToast(
-                "Voice note sent",
-                "🎙"
+                "RECORDING... TAP AGAIN TO STOP.",
+                "●"
+            );
+
+        } catch (error) {
+            cleanupRecordingStream();
+
+            if (error?.name === "NotAllowedError") {
+                showToast(
+                    "MICROPHONE PERMISSION WAS DENIED.",
+                    "!"
+                );
+            } else if (error?.name === "NotFoundError") {
+                showToast(
+                    "NO MICROPHONE WAS FOUND.",
+                    "!"
+                );
+            } else {
+                showToast(
+                    "COULDN'T START RECORDING.",
+                    "!"
+                );
+            }
+        }
+    };
+
+    voiceButton?.addEventListener("click", async () => {
+        if (
+            mediaRecorder &&
+            mediaRecorder.state === "recording"
+        ) {
+            stopRecording();
+
+            voiceButton.classList.remove(
+                "voice-recording"
+            );
+
+            voiceButton.textContent = "🎙";
+            voiceButton.title = "Record voice note";
+
+            return;
+        }
+
+        await startRecording();
+    });
+
+    /* =====================================================
+       CHAT BUTTONS
+    ===================================================== */
+
+    document
+        .getElementById("chatSearchButton")
+        ?.addEventListener("click", () => {
+            showToast(
+                "CHAT SEARCH WILL BE CONNECTED TO THE SHARED DATABASE.",
+                "⌕"
+            );
+        });
+
+    document
+        .getElementById("chatMoreButton")
+        ?.addEventListener("click", () => {
+            showToast(
+                "MORE QUANTUM FEATURES COMING WITH THE BACKEND.",
+                "•••"
+            );
+        });
+
+    /* =====================================================
+       QUANTUM AI
+    ===================================================== */
+
+    /*
+        IMPORTANT:
+        NEVER put your Gemini API key here.
+
+        Later, connect this endpoint to a secure backend:
+        Supabase Edge Function / server / API route.
+
+        Example:
+        const QUANTUM_AI_ENDPOINT = "/api/quantum-ai";
+    */
+
+    const QUANTUM_AI_ENDPOINT = "";
+
+    const miniAiForm =
+        document.getElementById("miniAiForm");
+
+    const miniAiInput =
+        document.getElementById("miniAiInput");
+
+    const aiForm =
+        document.getElementById("aiForm");
+
+    const aiInput =
+        document.getElementById("aiInput");
+
+    const aiMessages =
+        document.getElementById("aiMessages");
+
+    const aiSuggestions =
+        document.querySelectorAll(".ai-suggestion");
+
+    const appendAIMessage = (
+        text,
+        sender = "ai"
+    ) => {
+        if (!aiMessages) return;
+
+        const wrapper =
+            document.createElement("div");
+
+        wrapper.className =
+            `ai-message ${sender === "user" ? "user" : ""}`;
+
+        const avatar = document.createElement("div");
+
+        avatar.className =
+            "ai-message-avatar";
+
+        avatar.textContent =
+            sender === "user"
+                ? getInitials(
+                    localStorage.getItem(NAME_KEY) ||
+                    "QM"
+                )
+                : "Q";
+
+        const bodyEl =
+            document.createElement("div");
+
+        bodyEl.className =
+            "ai-message-body";
+
+        const nameEl =
+            document.createElement("div");
+
+        nameEl.className =
+            "ai-message-name";
+
+        nameEl.textContent =
+            sender === "user"
+                ? "YOU"
+                : "QUANTUM AI";
+
+        const bubble =
+            document.createElement("div");
+
+        bubble.className = "ai-bubble";
+        bubble.textContent = text;
+
+        bodyEl.appendChild(nameEl);
+        bodyEl.appendChild(bubble);
+
+        if (sender === "user") {
+            wrapper.appendChild(bodyEl);
+            wrapper.appendChild(avatar);
+        } else {
+            wrapper.appendChild(avatar);
+            wrapper.appendChild(bodyEl);
+        }
+
+        aiMessages.appendChild(wrapper);
+
+        aiMessages.scrollTop =
+            aiMessages.scrollHeight;
+
+        return wrapper;
+    };
+
+    const appendAILoading = () => {
+        if (!aiMessages) return null;
+
+        const wrapper =
+            document.createElement("div");
+
+        wrapper.className = "ai-message";
+
+        wrapper.innerHTML = `
+            <div class="ai-message-avatar">Q</div>
+
+            <div class="ai-message-body">
+                <div class="ai-message-name">
+                    QUANTUM AI
+                </div>
+
+                <div class="ai-bubble ai-loading">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        `;
+
+        aiMessages.appendChild(wrapper);
+
+        aiMessages.scrollTop =
+            aiMessages.scrollHeight;
+
+        return wrapper;
+    };
+
+    const requestQuantumAI = async (prompt) => {
+        if (!QUANTUM_AI_ENDPOINT) {
+            throw new Error(
+                "Quantum AI backend is not connected yet."
+            );
+        }
+
+        const response =
+            await fetch(QUANTUM_AI_ENDPOINT, {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    message: prompt
+                })
+            });
+
+        if (!response.ok) {
+            throw new Error(
+                `Backend error: ${response.status}`
+            );
+        }
+
+        const data =
+            await response.json();
+
+        return (
+            data.reply ||
+            data.text ||
+            data.response ||
+            "Quantum AI returned no response."
+        );
+    };
+
+    const sendAIMessage = async (prompt) => {
+        const cleanPrompt =
+            String(prompt || "").trim();
+
+        if (!cleanPrompt) return;
+
+        appendAIMessage(
+            cleanPrompt,
+            "user"
+        );
+
+        if (aiInput) {
+            aiInput.value = "";
+        }
+
+        const loading =
+            appendAILoading();
+
+        try {
+            const reply =
+                await requestQuantumAI(
+                    cleanPrompt
+                );
+
+            loading?.remove();
+
+            appendAIMessage(
+                reply,
+                "ai"
+            );
+
+        } catch (error) {
+            loading?.remove();
+
+            appendAIMessage(
+                "Quantum AI is visually online, but its secure Gemini backend is not connected yet. Connect the backend endpoint in script.js to activate the real AI.",
+                "ai"
+            );
+        }
+    };
+
+    aiForm?.addEventListener(
+        "submit",
+        event => {
+            event.preventDefault();
+
+            sendAIMessage(
+                aiInput?.value || ""
             );
         }
     );
 
+    miniAiForm?.addEventListener(
+        "submit",
+        event => {
+            event.preventDefault();
+
+            const prompt =
+                miniAiInput?.value.trim();
+
+            if (!prompt) return;
+
+            miniAiInput.value = "";
+
+            openPage("ai");
+
+            setTimeout(() => {
+                aiInput.value = prompt;
+                aiForm?.requestSubmit();
+            }, 350);
+        }
+    );
+
+    aiSuggestions.forEach(button => {
+        button.addEventListener(
+            "click",
+            () => {
+                const text =
+                    button.textContent.trim();
+
+                if (aiInput) {
+                    aiInput.value = text;
+                    aiInput.focus();
+                }
+            }
+        );
+    });
 
     /* =====================================================
        PONG
-    ====================================================== */
+    ===================================================== */
 
     const canvas =
         document.getElementById("pongCanvas");
 
-    const startButton =
+    const playerScoreElement =
+        document.getElementById("playerScore");
+
+    const aiScoreElement =
+        document.getElementById("aiScore");
+
+    const startGameButton =
         document.getElementById("startGame");
 
     const gameOverlay =
         document.getElementById("gameOverlay");
 
-    const playerScoreEl =
-        document.getElementById("playerScore");
+    const gameOverlayTitle =
+        document.getElementById("gameOverlayTitle");
 
-    const aiScoreEl =
-        document.getElementById("aiScore");
+    const gameOverlayText =
+        document.getElementById("gameOverlayText");
 
+    const touchUp =
+        document.getElementById("touchUp");
 
-    if (
-        canvas &&
-        playerScoreEl &&
-        aiScoreEl
-    ) {
+    const touchDown =
+        document.getElementById("touchDown");
 
-        const context =
-            canvas.getContext("2d");
+    if (!canvas) return;
 
-        if (!context) {
-            return;
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) return;
+
+    const GAME_WIDTH = canvas.width;
+    const GAME_HEIGHT = canvas.height;
+
+    const paddleWidth = 12;
+    const paddleHeight = 90;
+
+    const player = {
+        x: 25,
+        y: GAME_HEIGHT / 2 - paddleHeight / 2,
+        width: paddleWidth,
+        height: paddleHeight,
+        speed: 7
+    };
+
+    const ai = {
+        x: GAME_WIDTH - 25 - paddleWidth,
+        y: GAME_HEIGHT / 2 - paddleHeight / 2,
+        width: paddleWidth,
+        height: paddleHeight,
+        speed: 4.8
+    };
+
+    const ball = {
+        x: GAME_WIDTH / 2,
+        y: GAME_HEIGHT / 2,
+        radius: 8,
+        speedX: 6,
+        speedY: 4
+    };
+
+    let playerScore = 0;
+    let aiScore = 0;
+
+    let gameRunning = false;
+
+    const keys = {
+        up: false,
+        down: false
+    };
+
+    const resetBall = (direction = 1) => {
+        ball.x = GAME_WIDTH / 2;
+        ball.y = GAME_HEIGHT / 2;
+
+        const vertical =
+            (Math.random() * 2 - 1) * 4.5;
+
+        ball.speedX =
+            6 * direction;
+
+        ball.speedY =
+            vertical;
+    };
+
+    const resetGame = () => {
+        playerScore = 0;
+        aiScore = 0;
+
+        playerScoreElement.textContent =
+            playerScore;
+
+        aiScoreElement.textContent =
+            aiScore;
+
+        player.y =
+            GAME_HEIGHT / 2 -
+            paddleHeight / 2;
+
+        ai.y =
+            GAME_HEIGHT / 2 -
+            paddleHeight / 2;
+
+        resetBall(
+            Math.random() > .5 ? 1 : -1
+        );
+    };
+
+    const drawBackground = () => {
+        ctx.fillStyle = "#020203";
+        ctx.fillRect(
+            0,
+            0,
+            GAME_WIDTH,
+            GAME_HEIGHT
+        );
+
+        const gradient =
+            ctx.createRadialGradient(
+                GAME_WIDTH / 2,
+                GAME_HEIGHT / 2,
+                0,
+                GAME_WIDTH / 2,
+                GAME_HEIGHT / 2,
+                GAME_WIDTH * .65
+            );
+
+        gradient.addColorStop(
+            0,
+            "rgba(168,85,247,.08)"
+        );
+
+        gradient.addColorStop(
+            1,
+            "rgba(0,0,0,0)"
+        );
+
+        ctx.fillStyle = gradient;
+
+        ctx.fillRect(
+            0,
+            0,
+            GAME_WIDTH,
+            GAME_HEIGHT
+        );
+
+        ctx.strokeStyle =
+            "rgba(168,85,247,.13)";
+
+        ctx.setLineDash([7, 12]);
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            GAME_WIDTH / 2,
+            0
+        );
+
+        ctx.lineTo(
+            GAME_WIDTH / 2,
+            GAME_HEIGHT
+        );
+
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+
+        for (
+            let x = 0;
+            x < GAME_WIDTH;
+            x += 45
+        ) {
+            ctx.strokeStyle =
+                "rgba(255,255,255,.018)";
+
+            ctx.beginPath();
+
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, GAME_HEIGHT);
+
+            ctx.stroke();
         }
 
-        const keys = {
-            up: false,
-            down: false
-        };
-
-        const state = {
-
-            running: false,
-
-            player: {
-                x: 24,
-                y: canvas.height / 2 - 60,
-                width: 12,
-                height: 120,
-                speed: 6.5
-            },
-
-            ai: {
-                x: canvas.width - 36,
-                y: canvas.height / 2 - 60,
-                width: 12,
-                height: 120
-            },
-
-            ball: {
-                x: canvas.width / 2,
-                y: canvas.height / 2,
-                radius: 9,
-                vx: 4.5,
-                vy: 3.2
-            },
-
-            score: {
-                player: 0,
-                ai: 0
-            },
-
-            winScore: 7
-        };
-
-
-        const resetBall = () => {
-
-            state.ball.x =
-                canvas.width / 2;
-
-            state.ball.y =
-                canvas.height / 2;
-
-            const direction =
-                Math.random() > 0.5
-                    ? 1
-                    : -1;
-
-            state.ball.vx =
-                direction *
-                (4.5 + Math.random() * 1.1);
-
-            state.ball.vy =
-                (Math.random() - 0.5) * 5.5;
-        };
-
-
-        const updateScoreboard = () => {
-
-            playerScoreEl.textContent =
-                String(state.score.player);
-
-            aiScoreEl.textContent =
-                String(state.score.ai);
-        };
-
-
-        const endRound = (winnerText) => {
-
-            state.running = false;
-
-            if (!gameOverlay) {
-                return;
-            }
-
-            const title =
-                gameOverlay.querySelector("h3");
-
-            const detail =
-                gameOverlay.querySelector("p");
-
-            if (title) {
-                title.textContent =
-                    winnerText;
-            }
-
-            if (detail) {
-                detail.textContent =
-                    "Press start to play again";
-            }
-
-            gameOverlay.classList.remove(
-                "hidden"
-            );
-        };
-
-
-        const draw = () => {
-
-            context.clearRect(
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            );
-
-            context.fillStyle = "#020203";
-
-            context.fillRect(
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            );
-
-
-            context.fillStyle =
-                "rgba(168, 85, 247, 0.5)";
-
-            context.fillRect(
-                canvas.width / 2 - 2,
-                0,
-                4,
-                canvas.height
-            );
-
-
-            context.fillStyle =
-                "#f7f4fb";
-
-            context.fillRect(
-                state.player.x,
-                state.player.y,
-                state.player.width,
-                state.player.height
-            );
-
-            context.fillRect(
-                state.ai.x,
-                state.ai.y,
-                state.ai.width,
-                state.ai.height
-            );
-
-
-            context.beginPath();
-
-            context.arc(
-                state.ball.x,
-                state.ball.y,
-                state.ball.radius,
-                0,
-                Math.PI * 2
-            );
-
-            context.fillStyle =
-                "#c084fc";
-
-            context.fill();
-
-            context.closePath();
-        };
-
-
-        const update = () => {
-
-            if (!state.running) {
-                return;
-            }
-
-
-            if (keys.up) {
-                state.player.y -=
-                    state.player.speed;
-            }
-
-            if (keys.down) {
-                state.player.y +=
-                    state.player.speed;
-            }
-
-
-            state.player.y =
-                Math.max(
-                    0,
-                    Math.min(
-                        canvas.height -
-                            state.player.height,
-                        state.player.y
-                    )
-                );
-
-
-            const target =
-                state.ball.y -
-                state.ai.height / 2;
-
-            state.ai.y +=
-                (target - state.ai.y) *
-                0.12;
-
-
-            state.ai.y =
-                Math.max(
-                    0,
-                    Math.min(
-                        canvas.height -
-                            state.ai.height,
-                        state.ai.y
-                    )
-                );
-
-
-            state.ball.x +=
-                state.ball.vx;
-
-            state.ball.y +=
-                state.ball.vy;
-
-
-            if (
-                state.ball.y -
-                    state.ball.radius <= 0 ||
-                state.ball.y +
-                    state.ball.radius >=
-                    canvas.height
-            ) {
-
-                state.ball.vy *= -1;
-            }
-
-
-            const playerHit =
-                state.ball.x -
-                    state.ball.radius <=
-                    state.player.x +
-                        state.player.width &&
-                state.ball.x -
-                    state.ball.radius >=
-                    state.player.x &&
-                state.ball.y >=
-                    state.player.y &&
-                state.ball.y <=
-                    state.player.y +
-                        state.player.height;
-
-
-            const aiHit =
-                state.ball.x +
-                    state.ball.radius >=
-                    state.ai.x &&
-                state.ball.x +
-                    state.ball.radius <=
-                    state.ai.x +
-                        state.ai.width &&
-                state.ball.y >=
-                    state.ai.y &&
-                state.ball.y <=
-                    state.ai.y +
-                        state.ai.height;
-
-
-            if (playerHit) {
-
-                state.ball.x =
-                    state.player.x +
-                    state.player.width +
-                    state.ball.radius;
-
-                state.ball.vx =
-                    Math.abs(
-                        state.ball.vx
-                    ) + 0.35;
-
-                state.ball.vy +=
-                    (
-                        state.ball.y -
-                        (
-                            state.player.y +
-                            state.player.height / 2
-                        )
-                    ) * 0.12;
-            }
-
-
-            if (aiHit) {
-
-                state.ball.x =
-                    state.ai.x -
-                    state.ball.radius;
-
-                state.ball.vx =
-                    -Math.abs(
-                        state.ball.vx
-                    ) - 0.35;
-
-                state.ball.vy +=
-                    (
-                        state.ball.y -
-                        (
-                            state.ai.y +
-                            state.ai.height / 2
-                        )
-                    ) * 0.12;
-            }
-
-
-            if (state.ball.x < -20) {
-
-                state.score.ai += 1;
-
-                updateScoreboard();
-
-                if (
-                    state.score.ai >=
-                    state.winScore
-                ) {
-
-                    endRound("AI WINS!");
-
-                    return;
-                }
-
-                resetBall();
-            }
-
-
-            if (
-                state.ball.x >
-                canvas.width + 20
-            ) {
-
-                state.score.player += 1;
-
-                updateScoreboard();
-
-                if (
-                    state.score.player >=
-                    state.winScore
-                ) {
-
-                    endRound("YOU WIN!");
-
-                    return;
-                }
-
-                resetBall();
-            }
-        };
-
-
-        const animate = () => {
-
-            update();
-
-            draw();
-
-            window.requestAnimationFrame(
-                animate
-            );
-        };
-
-
-        const startGame = () => {
-
-            state.running = true;
-
-            if (
-                state.score.player >=
-                    state.winScore ||
-                state.score.ai >=
-                    state.winScore
-            ) {
-
-                state.score.player = 0;
-                state.score.ai = 0;
-
-                updateScoreboard();
-            }
-
-            resetBall();
-
-            if (gameOverlay) {
-
-                const title =
-                    gameOverlay.querySelector("h3");
-
-                const detail =
-                    gameOverlay.querySelector("p");
-
-                if (title) {
-                    title.textContent =
-                        "READY?";
-                }
-
-                if (detail) {
-                    detail.innerHTML = `
-                        Use
-                        <kbd>W</kbd>
-                        <kbd>S</kbd>
-                        or
-                        <kbd>↑</kbd>
-                        <kbd>↓</kbd>
-                    `;
-                }
-
-                gameOverlay.classList.add(
-                    "hidden"
-                );
-            }
-        };
-
-
-        window.addEventListener(
-            "keydown",
-            (event) => {
-
-                const key =
-                    event.key.toLowerCase();
-
-                if (
-                    key === "w" ||
-                    key === "arrowup"
-                ) {
-
-                    keys.up = true;
-
-                    if (
-                        currentPage === "games"
-                    ) {
-                        event.preventDefault();
-                    }
-                }
-
-                if (
-                    key === "s" ||
-                    key === "arrowdown"
-                ) {
-
-                    keys.down = true;
-
-                    if (
-                        currentPage === "games"
-                    ) {
-                        event.preventDefault();
-                    }
-                }
-            }
+        for (
+            let y = 0;
+            y < GAME_HEIGHT;
+            y += 45
+        ) {
+            ctx.strokeStyle =
+                "rgba(255,255,255,.018)";
+
+            ctx.beginPath();
+
+            ctx.moveTo(0, y);
+            ctx.lineTo(GAME_WIDTH, y);
+
+            ctx.stroke();
+        }
+    };
+
+    const drawPaddle = paddle => {
+        ctx.fillStyle =
+            "#c084fc";
+
+        ctx.shadowBlur = 20;
+        ctx.shadowColor =
+            "rgba(168,85,247,.7)";
+
+        ctx.fillRect(
+            paddle.x,
+            paddle.y,
+            paddle.width,
+            paddle.height
         );
 
+        ctx.shadowBlur = 0;
+    };
 
-        window.addEventListener(
-            "keyup",
-            (event) => {
+    const drawBall = () => {
+        ctx.beginPath();
 
-                const key =
-                    event.key.toLowerCase();
+        ctx.arc(
+            ball.x,
+            ball.y,
+            ball.radius,
+            0,
+            Math.PI * 2
+        );
 
-                if (
-                    key === "w" ||
-                    key === "arrowup"
-                ) {
-                    keys.up = false;
-                }
+        ctx.fillStyle = "#ffffff";
 
-                if (
-                    key === "s" ||
-                    key === "arrowdown"
-                ) {
-                    keys.down = false;
-                }
+        ctx.shadowBlur = 25;
+        ctx.shadowColor =
+            "rgba(192,132,252,.9)";
+
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+    };
+
+    const draw = () => {
+        drawBackground();
+
+        drawPaddle(player);
+        drawPaddle(ai);
+        drawBall();
+    };
+
+    const clampPaddle = paddle => {
+        paddle.y =
+            Math.max(
+                0,
+                Math.min(
+                    GAME_HEIGHT - paddle.height,
+                    paddle.y
+                )
+            );
+    };
+
+    const update = () => {
+        if (!gameRunning) return;
+
+        if (keys.up) {
+            player.y -= player.speed;
+        }
+
+        if (keys.down) {
+            player.y += player.speed;
+        }
+
+        clampPaddle(player);
+
+        /* AI */
+        const aiCenter =
+            ai.y + ai.height / 2;
+
+        const target =
+            ball.y;
+
+        if (aiCenter < target - 10) {
+            ai.y += ai.speed;
+        } else if (aiCenter > target + 10) {
+            ai.y -= ai.speed;
+        }
+
+        clampPaddle(ai);
+
+        /* Ball */
+        ball.x += ball.speedX;
+        ball.y += ball.speedY;
+
+        if (
+            ball.y - ball.radius <= 0 ||
+            ball.y + ball.radius >= GAME_HEIGHT
+        ) {
+            ball.speedY *= -1;
+        }
+
+        /* Player collision */
+        if (
+            ball.x - ball.radius <=
+                player.x + player.width &&
+            ball.x + ball.radius >=
+                player.x &&
+            ball.y >= player.y &&
+            ball.y <= player.y + player.height &&
+            ball.speedX < 0
+        ) {
+            const relative =
+                (ball.y -
+                    (player.y + player.height / 2)) /
+                (player.height / 2);
+
+            ball.speedX =
+                Math.abs(ball.speedX) * 1.05;
+
+            ball.speedY =
+                relative * 6;
+
+            ball.x =
+                player.x + player.width +
+                ball.radius;
+        }
+
+        /* AI collision */
+        if (
+            ball.x + ball.radius >= ai.x &&
+            ball.x - ball.radius <=
+                ai.x + ai.width &&
+            ball.y >= ai.y &&
+            ball.y <= ai.y + ai.height &&
+            ball.speedX > 0
+        ) {
+            const relative =
+                (ball.y -
+                    (ai.y + ai.height / 2)) /
+                (ai.height / 2);
+
+            ball.speedX =
+                -Math.abs(ball.speedX) * 1.05;
+
+            ball.speedY =
+                relative * 6;
+
+            ball.x =
+                ai.x -
+                ball.radius;
+        }
+
+        /* Score */
+        if (ball.x < -30) {
+            aiScore++;
+
+            aiScoreElement.textContent =
+                aiScore;
+
+            if (aiScore >= 7) {
+                endGame(false);
+            } else {
+                resetBall(1);
             }
-        );
+        }
 
+        if (ball.x > GAME_WIDTH + 30) {
+            playerScore++;
 
-        startButton?.addEventListener(
-            "click",
-            startGame
-        );
+            playerScoreElement.textContent =
+                playerScore;
 
+            if (playerScore >= 7) {
+                endGame(true);
+            } else {
+                resetBall(-1);
+            }
+        }
+    };
 
-        updateScoreboard();
-
-        resetBall();
-
+    const loop = () => {
+        update();
         draw();
 
-        window.requestAnimationFrame(
-            animate
-        );
-    }
+        requestAnimationFrame(loop);
+    };
 
+    const startGame = () => {
+        resetGame();
+
+        gameRunning = true;
+
+        gameOverlay.classList.add("hidden");
+
+        gameOverlayTitle.textContent =
+            "QUANTUM PONG";
+
+        gameOverlayText.textContent =
+            "First to 7 wins.";
+    };
+
+    const endGame = playerWon => {
+        gameRunning = false;
+
+        gameOverlay.classList.remove(
+            "hidden"
+        );
+
+        if (playerWon) {
+            gameOverlayTitle.textContent =
+                "YOU WIN.";
+
+            gameOverlayText.textContent =
+                "Quantum dominance achieved.";
+        } else {
+            gameOverlayTitle.textContent =
+                "AI WINS.";
+
+            gameOverlayText.textContent =
+                "The machine got you this time.";
+        }
+
+        startGameButton.textContent =
+            "PLAY AGAIN";
+    };
+
+    startGameButton?.addEventListener(
+        "click",
+        startGame
+    );
+
+    document.addEventListener(
+        "keydown",
+        event => {
+            if (
+                event.key === "w" ||
+                event.key === "W" ||
+                event.key === "ArrowUp"
+            ) {
+                keys.up = true;
+                event.preventDefault();
+            }
+
+            if (
+                event.key === "s" ||
+                event.key === "S" ||
+                event.key === "ArrowDown"
+            ) {
+                keys.down = true;
+                event.preventDefault();
+            }
+        }
+    );
+
+    document.addEventListener(
+        "keyup",
+        event => {
+            if (
+                event.key === "w" ||
+                event.key === "W" ||
+                event.key === "ArrowUp"
+            ) {
+                keys.up = false;
+            }
+
+            if (
+                event.key === "s" ||
+                event.key === "S" ||
+                event.key === "ArrowDown"
+            ) {
+                keys.down = false;
+            }
+        }
+    );
+
+    const bindTouchControl = (
+        element,
+        direction
+    ) => {
+        if (!element) return;
+
+        const start = event => {
+            event.preventDefault();
+            keys[direction] = true;
+        };
+
+        const stop = event => {
+            event.preventDefault();
+            keys[direction] = false;
+        };
+
+        element.addEventListener(
+            "touchstart",
+            start,
+            { passive: false }
+        );
+
+        element.addEventListener(
+            "touchend",
+            stop,
+            { passive: false }
+        );
+
+        element.addEventListener(
+            "touchcancel",
+            stop,
+            { passive: false }
+        );
+
+        element.addEventListener(
+            "mousedown",
+            start
+        );
+
+        element.addEventListener(
+            "mouseup",
+            stop
+        );
+
+        element.addEventListener(
+            "mouseleave",
+            stop
+        );
+    };
+
+    bindTouchControl(
+        touchUp,
+        "up"
+    );
+
+    bindTouchControl(
+        touchDown,
+        "down"
+    );
+
+    draw();
+    loop();
+
+    /* =====================================================
+       CLEANUP
+    ===================================================== */
+
+    window.addEventListener(
+        "beforeunload",
+        () => {
+            cleanupRecordingStream();
+
+            if (
+                "speechSynthesis" in window
+            ) {
+                window.speechSynthesis.cancel();
+            }
+        }
+    );
 });
