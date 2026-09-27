@@ -57,10 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const nameScreen = document.getElementById("nameScreen");
     const nameForm = document.getElementById("nameForm");
     const nameInput = document.getElementById("nameInput");
-
-    const rejectionScreen = document.getElementById("rejectionScreen");
-    const rejectionName = document.getElementById("rejectionName");
-    const retryAccess = document.getElementById("retryAccess");
+    const nameError = document.getElementById("nameError");
 
     const heroUserName = document.getElementById("heroUserName");
 
@@ -119,54 +116,17 @@ document.addEventListener("DOMContentLoaded", () => {
             nameScreen.classList.add("hidden");
         }
 
-        if (rejectionScreen) {
-            rejectionScreen.classList.remove("show");
-        }
+        nameError?.classList.remove("show");
+        nameInput?.classList.remove("input-error");
 
         return true;
     };
 
-    const rejectUser = (enteredName) => {
+    const rejectUser = () => {
         localStorage.removeItem(NAME_KEY);
 
-        if (rejectionName) {
-            rejectionName.textContent =
-                `${String(enteredName || "UNKNOWN").toUpperCase()} // IDENTITY NOT RECOGNIZED`;
-        }
-
-        if (nameScreen) {
-            nameScreen.classList.add("hidden");
-        }
-
-        if (rejectionScreen) {
-            rejectionScreen.classList.add("show");
-        }
-
-        body.classList.add("locked");
-
-        /* Dramatic vibration on supported phones */
-        if (navigator.vibrate) {
-            navigator.vibrate([120, 60, 180, 60, 250]);
-        }
-
-        /* Small browser voice effect when speech synthesis is available */
-        if ("speechSynthesis" in window) {
-            try {
-                window.speechSynthesis.cancel();
-
-                const voice = new SpeechSynthesisUtterance(
-                    "You are not part of Quantum Club. Go away."
-                );
-
-                voice.rate = 0.82;
-                voice.pitch = 0.35;
-                voice.volume = 1;
-
-                window.speechSynthesis.speak(voice);
-            } catch (error) {
-                /* Speech is optional. */
-            }
-        }
+        nameError?.classList.add("show");
+        nameInput?.classList.add("input-error");
     };
 
     nameForm?.addEventListener("submit", (event) => {
@@ -185,18 +145,13 @@ document.addEventListener("DOMContentLoaded", () => {
             unlockSite(approved);
             showToast(`ACCESS GRANTED — ${approved}`, "✓");
         } else {
-            rejectUser(enteredName);
+            rejectUser();
         }
     });
 
-    retryAccess?.addEventListener("click", () => {
-        rejectionScreen?.classList.remove("show");
-        nameScreen?.classList.remove("hidden");
-
-        setTimeout(() => {
-            nameInput?.focus();
-            nameInput?.select();
-        }, 200);
+    nameInput?.addEventListener("input", () => {
+        nameError?.classList.remove("show");
+        nameInput.classList.remove("input-error");
     });
 
     /* =====================================================
@@ -315,9 +270,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const typingIndicator = document.getElementById("typingIndicator");
 
+    const voiceRecorderBar = document.getElementById("voiceRecorderBar");
+    const voiceRecorderTime = document.getElementById("voiceRecorderTime");
+    const voiceCancelButton = document.getElementById("voiceCancelButton");
+    const voiceStopButton = document.getElementById("voiceStopButton");
+
     let mediaRecorder = null;
     let audioChunks = [];
     let recordingStream = null;
+    let recordingCancelled = false;
+    let recordingTimerInterval = null;
+    let recordingStartedAt = 0;
 
     let typingTimeout = null;
 
@@ -526,15 +489,33 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     /* =====================================================
-       REAL VOICE NOTES
+       VOICE NOTES
+
+       Tapping the mic button opens a dedicated recorder bar
+       (like WhatsApp / Discord) showing a live timer, with a
+       cancel option and a send option — instead of silently
+       toggling the mic icon.
     ===================================================== */
 
-    const stopRecording = () => {
-        if (
-            mediaRecorder &&
-            mediaRecorder.state !== "inactive"
-        ) {
-            mediaRecorder.stop();
+    const formatRecordingTime = (ms) => {
+        const totalSeconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+
+        return `${minutes}:${String(seconds).padStart(2, "0")}`;
+    };
+
+    const showRecorderBar = () => {
+        voiceRecorderBar?.classList.add("show");
+        chatForm?.classList.add("hidden");
+    };
+
+    const hideRecorderBar = () => {
+        voiceRecorderBar?.classList.remove("show");
+        chatForm?.classList.remove("hidden");
+
+        if (voiceRecorderTime) {
+            voiceRecorderTime.textContent = "0:00";
         }
     };
 
@@ -546,6 +527,25 @@ document.addEventListener("DOMContentLoaded", () => {
             .forEach(track => track.stop());
 
         recordingStream = null;
+    };
+
+    const stopRecordingTimer = () => {
+        clearInterval(recordingTimerInterval);
+        recordingTimerInterval = null;
+    };
+
+    const stopRecording = (cancelled = false) => {
+        recordingCancelled = cancelled;
+
+        if (
+            mediaRecorder &&
+            mediaRecorder.state !== "inactive"
+        ) {
+            mediaRecorder.stop();
+        }
+
+        stopRecordingTimer();
+        hideRecorderBar();
     };
 
     const startRecording = async () => {
@@ -594,6 +594,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 : new MediaRecorder(recordingStream);
 
             audioChunks = [];
+            recordingCancelled = false;
 
             mediaRecorder.addEventListener(
                 "dataavailable",
@@ -607,6 +608,17 @@ document.addEventListener("DOMContentLoaded", () => {
             mediaRecorder.addEventListener(
                 "stop",
                 () => {
+                    cleanupRecordingStream();
+
+                    const wasCancelled = recordingCancelled;
+
+                    if (wasCancelled) {
+                        audioChunks = [];
+                        mediaRecorder = null;
+                        showToast("VOICE NOTE DISCARDED.", "✕");
+                        return;
+                    }
+
                     const finalType =
                         mediaRecorder.mimeType ||
                         mimeType ||
@@ -617,9 +629,11 @@ document.addEventListener("DOMContentLoaded", () => {
                         { type: finalType }
                     );
 
+                    audioChunks = [];
+                    mediaRecorder = null;
+
                     if (!blob.size) {
                         showToast("NO AUDIO WAS RECORDED.", "!");
-                        cleanupRecordingStream();
                         return;
                     }
 
@@ -632,14 +646,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     });
 
                     showToast(
-                        "VOICE NOTE RECORDED.",
+                        "VOICE NOTE SENT.",
                         "🎙"
                     );
-
-                    cleanupRecordingStream();
-
-                    audioChunks = [];
-                    mediaRecorder = null;
                 }
             );
 
@@ -651,35 +660,33 @@ document.addEventListener("DOMContentLoaded", () => {
                         "!"
                     );
 
+                    stopRecordingTimer();
+                    hideRecorderBar();
                     cleanupRecordingStream();
+
                     mediaRecorder = null;
                     audioChunks = [];
-
-                    voiceButton?.classList.remove(
-                        "voice-recording"
-                    );
-
-                    if (voiceButton) {
-                        voiceButton.textContent = "🎙";
-                    }
                 }
             );
 
             mediaRecorder.start();
 
-            voiceButton?.classList.add(
-                "voice-recording"
-            );
+            showRecorderBar();
 
-            if (voiceButton) {
-                voiceButton.textContent = "■";
-                voiceButton.title = "Stop recording";
+            recordingStartedAt = Date.now();
+
+            if (voiceRecorderTime) {
+                voiceRecorderTime.textContent = "0:00";
             }
 
-            showToast(
-                "RECORDING... TAP AGAIN TO STOP.",
-                "●"
-            );
+            recordingTimerInterval = setInterval(() => {
+                if (voiceRecorderTime) {
+                    voiceRecorderTime.textContent =
+                        formatRecordingTime(
+                            Date.now() - recordingStartedAt
+                        );
+                }
+            }, 250);
 
         } catch (error) {
             cleanupRecordingStream();
@@ -708,19 +715,18 @@ document.addEventListener("DOMContentLoaded", () => {
             mediaRecorder &&
             mediaRecorder.state === "recording"
         ) {
-            stopRecording();
-
-            voiceButton.classList.remove(
-                "voice-recording"
-            );
-
-            voiceButton.textContent = "🎙";
-            voiceButton.title = "Record voice note";
-
             return;
         }
 
         await startRecording();
+    });
+
+    voiceStopButton?.addEventListener("click", () => {
+        stopRecording(false);
+    });
+
+    voiceCancelButton?.addEventListener("click", () => {
+        stopRecording(true);
     });
 
     /* =====================================================
@@ -1005,6 +1011,65 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     /* =====================================================
+       ARCADE — GAME SELECTION COVER
+    ===================================================== */
+
+    const arcadeSelect = document.getElementById("arcadeSelect");
+    const arcadeSelectCards = document.querySelectorAll(".arcade-select-card");
+    const arcadeBackButtons = document.querySelectorAll("[data-arcade-back]");
+
+    const gameContainers = {
+        pong: document.getElementById("pongContainer"),
+        snake: document.getElementById("snakeContainer"),
+        tictactoe: document.getElementById("tttContainer")
+    };
+
+    let pongStarted = false;
+    let snakeInitialized = false;
+    let tttInitialized = false;
+
+    const showArcadeSelect = () => {
+        arcadeSelect?.classList.remove("hidden");
+
+        Object.values(gameContainers).forEach(container => {
+            container?.classList.add("hidden");
+        });
+
+        pauseSnakeLoop();
+        pongRunning = false;
+    };
+
+    const openGame = (gameName) => {
+        const container = gameContainers[gameName];
+
+        if (!container) return;
+
+        arcadeSelect?.classList.add("hidden");
+
+        Object.entries(gameContainers).forEach(([name, el]) => {
+            el?.classList.toggle("hidden", name !== gameName);
+        });
+
+        if (gameName === "snake") {
+            initSnake();
+        }
+
+        if (gameName === "tictactoe") {
+            initTicTacToe();
+        }
+    };
+
+    arcadeSelectCards.forEach(card => {
+        card.addEventListener("click", () => {
+            openGame(card.dataset.game);
+        });
+    });
+
+    arcadeBackButtons.forEach(button => {
+        button.addEventListener("click", showArcadeSelect);
+    });
+
+    /* =====================================================
        PONG
     ===================================================== */
 
@@ -1035,515 +1100,735 @@ document.addEventListener("DOMContentLoaded", () => {
     const touchDown =
         document.getElementById("touchDown");
 
-    if (!canvas) return;
+    let pongRunning = false;
 
-    const ctx = canvas.getContext("2d");
+    if (canvas) {
+        const ctx = canvas.getContext("2d");
 
-    if (!ctx) return;
+        if (ctx) {
 
-    const GAME_WIDTH = canvas.width;
-    const GAME_HEIGHT = canvas.height;
+            const GAME_WIDTH = canvas.width;
+            const GAME_HEIGHT = canvas.height;
 
-    const paddleWidth = 12;
-    const paddleHeight = 90;
+            const paddleWidth = 12;
+            const paddleHeight = 90;
 
-    const player = {
-        x: 25,
-        y: GAME_HEIGHT / 2 - paddleHeight / 2,
-        width: paddleWidth,
-        height: paddleHeight,
-        speed: 7
+            const player = {
+                x: 25,
+                y: GAME_HEIGHT / 2 - paddleHeight / 2,
+                width: paddleWidth,
+                height: paddleHeight,
+                speed: 7
+            };
+
+            const ai = {
+                x: GAME_WIDTH - 25 - paddleWidth,
+                y: GAME_HEIGHT / 2 - paddleHeight / 2,
+                width: paddleWidth,
+                height: paddleHeight,
+                speed: 4.8
+            };
+
+            const ball = {
+                x: GAME_WIDTH / 2,
+                y: GAME_HEIGHT / 2,
+                radius: 8,
+                speedX: 6,
+                speedY: 4
+            };
+
+            let playerScore = 0;
+            let aiScore = 0;
+
+            const keys = {
+                up: false,
+                down: false
+            };
+
+            const resetBall = (direction = 1) => {
+                ball.x = GAME_WIDTH / 2;
+                ball.y = GAME_HEIGHT / 2;
+
+                const vertical =
+                    (Math.random() * 2 - 1) * 4.5;
+
+                ball.speedX =
+                    6 * direction;
+
+                ball.speedY =
+                    vertical;
+            };
+
+            const resetGame = () => {
+                playerScore = 0;
+                aiScore = 0;
+
+                playerScoreElement.textContent =
+                    playerScore;
+
+                aiScoreElement.textContent =
+                    aiScore;
+
+                player.y =
+                    GAME_HEIGHT / 2 -
+                    paddleHeight / 2;
+
+                ai.y =
+                    GAME_HEIGHT / 2 -
+                    paddleHeight / 2;
+
+                resetBall(
+                    Math.random() > .5 ? 1 : -1
+                );
+            };
+
+            const drawBackground = () => {
+                ctx.fillStyle = "#020203";
+                ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+                const gradient =
+                    ctx.createRadialGradient(
+                        GAME_WIDTH / 2, GAME_HEIGHT / 2, 0,
+                        GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH * .65
+                    );
+
+                gradient.addColorStop(0, "rgba(168,85,247,.08)");
+                gradient.addColorStop(1, "rgba(0,0,0,0)");
+
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+                ctx.strokeStyle = "rgba(168,85,247,.13)";
+                ctx.setLineDash([7, 12]);
+
+                ctx.beginPath();
+                ctx.moveTo(GAME_WIDTH / 2, 0);
+                ctx.lineTo(GAME_WIDTH / 2, GAME_HEIGHT);
+                ctx.stroke();
+
+                ctx.setLineDash([]);
+
+                for (let x = 0; x < GAME_WIDTH; x += 45) {
+                    ctx.strokeStyle = "rgba(255,255,255,.018)";
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, GAME_HEIGHT);
+                    ctx.stroke();
+                }
+
+                for (let y = 0; y < GAME_HEIGHT; y += 45) {
+                    ctx.strokeStyle = "rgba(255,255,255,.018)";
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(GAME_WIDTH, y);
+                    ctx.stroke();
+                }
+            };
+
+            const drawPaddle = paddle => {
+                ctx.fillStyle = "#c084fc";
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = "rgba(168,85,247,.7)";
+
+                ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+
+                ctx.shadowBlur = 0;
+            };
+
+            const drawBall = () => {
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+
+                ctx.fillStyle = "#ffffff";
+                ctx.shadowBlur = 25;
+                ctx.shadowColor = "rgba(192,132,252,.9)";
+
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            };
+
+            const draw = () => {
+                drawBackground();
+                drawPaddle(player);
+                drawPaddle(ai);
+                drawBall();
+            };
+
+            const clampPaddle = paddle => {
+                paddle.y = Math.max(
+                    0,
+                    Math.min(GAME_HEIGHT - paddle.height, paddle.y)
+                );
+            };
+
+            const endGame = playerWon => {
+                pongRunning = false;
+
+                gameOverlay.classList.remove("hidden");
+
+                if (playerWon) {
+                    gameOverlayTitle.textContent = "YOU WIN.";
+                    gameOverlayText.textContent = "Quantum dominance achieved.";
+                } else {
+                    gameOverlayTitle.textContent = "AI WINS.";
+                    gameOverlayText.textContent = "The machine got you this time.";
+                }
+
+                startGameButton.textContent = "PLAY AGAIN";
+            };
+
+            const update = () => {
+                if (!pongRunning) return;
+
+                if (keys.up) player.y -= player.speed;
+                if (keys.down) player.y += player.speed;
+
+                clampPaddle(player);
+
+                const aiCenter = ai.y + ai.height / 2;
+                const target = ball.y;
+
+                if (aiCenter < target - 10) ai.y += ai.speed;
+                else if (aiCenter > target + 10) ai.y -= ai.speed;
+
+                clampPaddle(ai);
+
+                ball.x += ball.speedX;
+                ball.y += ball.speedY;
+
+                if (ball.y - ball.radius <= 0 || ball.y + ball.radius >= GAME_HEIGHT) {
+                    ball.speedY *= -1;
+                }
+
+                if (
+                    ball.x - ball.radius <= player.x + player.width &&
+                    ball.x + ball.radius >= player.x &&
+                    ball.y >= player.y &&
+                    ball.y <= player.y + player.height &&
+                    ball.speedX < 0
+                ) {
+                    const relative = (ball.y - (player.y + player.height / 2)) / (player.height / 2);
+
+                    ball.speedX = Math.abs(ball.speedX) * 1.05;
+                    ball.speedY = relative * 6;
+                    ball.x = player.x + player.width + ball.radius;
+                }
+
+                if (
+                    ball.x + ball.radius >= ai.x &&
+                    ball.x - ball.radius <= ai.x + ai.width &&
+                    ball.y >= ai.y &&
+                    ball.y <= ai.y + ai.height &&
+                    ball.speedX > 0
+                ) {
+                    const relative = (ball.y - (ai.y + ai.height / 2)) / (ai.height / 2);
+
+                    ball.speedX = -Math.abs(ball.speedX) * 1.05;
+                    ball.speedY = relative * 6;
+                    ball.x = ai.x - ball.radius;
+                }
+
+                if (ball.x < -30) {
+                    aiScore++;
+                    aiScoreElement.textContent = aiScore;
+
+                    if (aiScore >= 7) endGame(false);
+                    else resetBall(1);
+                }
+
+                if (ball.x > GAME_WIDTH + 30) {
+                    playerScore++;
+                    playerScoreElement.textContent = playerScore;
+
+                    if (playerScore >= 7) endGame(true);
+                    else resetBall(-1);
+                }
+            };
+
+            const loop = () => {
+                update();
+                draw();
+                requestAnimationFrame(loop);
+            };
+
+            const startPong = () => {
+                resetGame();
+                pongRunning = true;
+
+                gameOverlay.classList.add("hidden");
+                gameOverlayTitle.textContent = "QUANTUM PONG";
+                gameOverlayText.textContent = "First to 7 wins.";
+            };
+
+            startGameButton?.addEventListener("click", startPong);
+
+            const isTypingTarget = (target) => {
+                const tag = target?.tagName;
+                return tag === "INPUT" || tag === "TEXTAREA";
+            };
+
+            document.addEventListener("keydown", event => {
+                if (isTypingTarget(event.target)) return;
+
+                const container = gameContainers.pong;
+                if (!container || container.classList.contains("hidden")) return;
+
+                if (event.key === "w" || event.key === "W" || event.key === "ArrowUp") {
+                    keys.up = true;
+                    event.preventDefault();
+                }
+                if (event.key === "s" || event.key === "S" || event.key === "ArrowDown") {
+                    keys.down = true;
+                    event.preventDefault();
+                }
+            });
+
+            document.addEventListener("keyup", event => {
+                if (event.key === "w" || event.key === "W" || event.key === "ArrowUp") {
+                    keys.up = false;
+                }
+                if (event.key === "s" || event.key === "S" || event.key === "ArrowDown") {
+                    keys.down = false;
+                }
+            });
+
+            const bindTouchControl = (element, direction) => {
+                if (!element) return;
+
+                const start = event => { event.preventDefault(); keys[direction] = true; };
+                const stop = event => { event.preventDefault(); keys[direction] = false; };
+
+                element.addEventListener("touchstart", start, { passive: false });
+                element.addEventListener("touchend", stop, { passive: false });
+                element.addEventListener("touchcancel", stop, { passive: false });
+                element.addEventListener("mousedown", start);
+                element.addEventListener("mouseup", stop);
+                element.addEventListener("mouseleave", stop);
+            };
+
+            bindTouchControl(touchUp, "up");
+            bindTouchControl(touchDown, "down");
+
+            draw();
+            loop();
+        }
+    }
+
+    /* =====================================================
+       SNAKE
+    ===================================================== */
+
+    const snakeCanvas = document.getElementById("snakeCanvas");
+    const snakeScoreElement = document.getElementById("snakeScore");
+    const snakeBestElement = document.getElementById("snakeBest");
+    const snakeOverlay = document.getElementById("snakeOverlay");
+    const snakeOverlayTitle = document.getElementById("snakeOverlayTitle");
+    const snakeOverlayText = document.getElementById("snakeOverlayText");
+    const startSnakeButton = document.getElementById("startSnake");
+
+    const snakeUpBtn = document.getElementById("snakeUp");
+    const snakeDownBtn = document.getElementById("snakeDown");
+    const snakeLeftBtn = document.getElementById("snakeLeft");
+    const snakeRightBtn = document.getElementById("snakeRight");
+
+    const SNAKE_COLS = 22;
+    let snakeCtx = null;
+    let snakeCellSize = 0;
+
+    let snake = [];
+    let snakeDirection = { x: 1, y: 0 };
+    let snakeNextDirection = { x: 1, y: 0 };
+    let food = { x: 0, y: 0 };
+    let snakeScore = 0;
+    let snakeBest = Number(localStorage.getItem("quantum_snake_best")) || 0;
+    let snakeRunning = false;
+    let snakeLoopHandle = null;
+    const SNAKE_SPEED_MS = 110;
+
+    const initSnake = () => {
+        if (snakeInitialized || !snakeCanvas) return;
+
+        snakeInitialized = true;
+        snakeCtx = snakeCanvas.getContext("2d");
+        snakeCellSize = snakeCanvas.width / SNAKE_COLS;
+
+        if (snakeBestElement) {
+            snakeBestElement.textContent = snakeBest;
+        }
+
+        drawSnakeFrame();
     };
 
-    const ai = {
-        x: GAME_WIDTH - 25 - paddleWidth,
-        y: GAME_HEIGHT / 2 - paddleHeight / 2,
-        width: paddleWidth,
-        height: paddleHeight,
-        speed: 4.8
-    };
+    const placeFood = () => {
+        let candidate;
 
-    const ball = {
-        x: GAME_WIDTH / 2,
-        y: GAME_HEIGHT / 2,
-        radius: 8,
-        speedX: 6,
-        speedY: 4
-    };
-
-    let playerScore = 0;
-    let aiScore = 0;
-
-    let gameRunning = false;
-
-    const keys = {
-        up: false,
-        down: false
-    };
-
-    const resetBall = (direction = 1) => {
-        ball.x = GAME_WIDTH / 2;
-        ball.y = GAME_HEIGHT / 2;
-
-        const vertical =
-            (Math.random() * 2 - 1) * 4.5;
-
-        ball.speedX =
-            6 * direction;
-
-        ball.speedY =
-            vertical;
-    };
-
-    const resetGame = () => {
-        playerScore = 0;
-        aiScore = 0;
-
-        playerScoreElement.textContent =
-            playerScore;
-
-        aiScoreElement.textContent =
-            aiScore;
-
-        player.y =
-            GAME_HEIGHT / 2 -
-            paddleHeight / 2;
-
-        ai.y =
-            GAME_HEIGHT / 2 -
-            paddleHeight / 2;
-
-        resetBall(
-            Math.random() > .5 ? 1 : -1
+        do {
+            candidate = {
+                x: Math.floor(Math.random() * SNAKE_COLS),
+                y: Math.floor(Math.random() * SNAKE_COLS)
+            };
+        } while (
+            snake.some(segment => segment.x === candidate.x && segment.y === candidate.y)
         );
+
+        food = candidate;
     };
 
-    const drawBackground = () => {
-        ctx.fillStyle = "#020203";
-        ctx.fillRect(
-            0,
-            0,
-            GAME_WIDTH,
-            GAME_HEIGHT
-        );
+    const resetSnake = () => {
+        const mid = Math.floor(SNAKE_COLS / 2);
 
-        const gradient =
-            ctx.createRadialGradient(
-                GAME_WIDTH / 2,
-                GAME_HEIGHT / 2,
+        snake = [
+            { x: mid - 1, y: mid },
+            { x: mid - 2, y: mid },
+            { x: mid - 3, y: mid }
+        ];
+
+        snakeDirection = { x: 1, y: 0 };
+        snakeNextDirection = { x: 1, y: 0 };
+        snakeScore = 0;
+
+        if (snakeScoreElement) snakeScoreElement.textContent = snakeScore;
+
+        placeFood();
+    };
+
+    const drawSnakeFrame = () => {
+        if (!snakeCtx) return;
+
+        snakeCtx.fillStyle = "#020203";
+        snakeCtx.fillRect(0, 0, snakeCanvas.width, snakeCanvas.height);
+
+        snakeCtx.strokeStyle = "rgba(255,255,255,.02)";
+
+        for (let i = 0; i <= SNAKE_COLS; i++) {
+            const pos = i * snakeCellSize;
+
+            snakeCtx.beginPath();
+            snakeCtx.moveTo(pos, 0);
+            snakeCtx.lineTo(pos, snakeCanvas.height);
+            snakeCtx.stroke();
+
+            snakeCtx.beginPath();
+            snakeCtx.moveTo(0, pos);
+            snakeCtx.lineTo(snakeCanvas.width, pos);
+            snakeCtx.stroke();
+        }
+
+        if (food) {
+            snakeCtx.fillStyle = "#ff8fae";
+            snakeCtx.shadowBlur = 18;
+            snakeCtx.shadowColor = "rgba(255,54,95,.8)";
+
+            snakeCtx.beginPath();
+            snakeCtx.arc(
+                food.x * snakeCellSize + snakeCellSize / 2,
+                food.y * snakeCellSize + snakeCellSize / 2,
+                snakeCellSize / 2.6,
                 0,
-                GAME_WIDTH / 2,
-                GAME_HEIGHT / 2,
-                GAME_WIDTH * .65
+                Math.PI * 2
             );
-
-        gradient.addColorStop(
-            0,
-            "rgba(168,85,247,.08)"
-        );
-
-        gradient.addColorStop(
-            1,
-            "rgba(0,0,0,0)"
-        );
-
-        ctx.fillStyle = gradient;
-
-        ctx.fillRect(
-            0,
-            0,
-            GAME_WIDTH,
-            GAME_HEIGHT
-        );
-
-        ctx.strokeStyle =
-            "rgba(168,85,247,.13)";
-
-        ctx.setLineDash([7, 12]);
-
-        ctx.beginPath();
-
-        ctx.moveTo(
-            GAME_WIDTH / 2,
-            0
-        );
-
-        ctx.lineTo(
-            GAME_WIDTH / 2,
-            GAME_HEIGHT
-        );
-
-        ctx.stroke();
-
-        ctx.setLineDash([]);
-
-        for (
-            let x = 0;
-            x < GAME_WIDTH;
-            x += 45
-        ) {
-            ctx.strokeStyle =
-                "rgba(255,255,255,.018)";
-
-            ctx.beginPath();
-
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, GAME_HEIGHT);
-
-            ctx.stroke();
+            snakeCtx.fill();
+            snakeCtx.shadowBlur = 0;
         }
 
-        for (
-            let y = 0;
-            y < GAME_HEIGHT;
-            y += 45
-        ) {
-            ctx.strokeStyle =
-                "rgba(255,255,255,.018)";
+        snake.forEach((segment, index) => {
+            snakeCtx.fillStyle = index === 0 ? "#c084fc" : "#8b5cf6";
+            snakeCtx.shadowBlur = index === 0 ? 18 : 0;
+            snakeCtx.shadowColor = "rgba(168,85,247,.7)";
 
-            ctx.beginPath();
+            const pad = 1.5;
 
-            ctx.moveTo(0, y);
-            ctx.lineTo(GAME_WIDTH, y);
-
-            ctx.stroke();
-        }
-    };
-
-    const drawPaddle = paddle => {
-        ctx.fillStyle =
-            "#c084fc";
-
-        ctx.shadowBlur = 20;
-        ctx.shadowColor =
-            "rgba(168,85,247,.7)";
-
-        ctx.fillRect(
-            paddle.x,
-            paddle.y,
-            paddle.width,
-            paddle.height
-        );
-
-        ctx.shadowBlur = 0;
-    };
-
-    const drawBall = () => {
-        ctx.beginPath();
-
-        ctx.arc(
-            ball.x,
-            ball.y,
-            ball.radius,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.fillStyle = "#ffffff";
-
-        ctx.shadowBlur = 25;
-        ctx.shadowColor =
-            "rgba(192,132,252,.9)";
-
-        ctx.fill();
-
-        ctx.shadowBlur = 0;
-    };
-
-    const draw = () => {
-        drawBackground();
-
-        drawPaddle(player);
-        drawPaddle(ai);
-        drawBall();
-    };
-
-    const clampPaddle = paddle => {
-        paddle.y =
-            Math.max(
-                0,
-                Math.min(
-                    GAME_HEIGHT - paddle.height,
-                    paddle.y
-                )
+            snakeCtx.fillRect(
+                segment.x * snakeCellSize + pad,
+                segment.y * snakeCellSize + pad,
+                snakeCellSize - pad * 2,
+                snakeCellSize - pad * 2
             );
+            snakeCtx.shadowBlur = 0;
+        });
     };
 
-    const update = () => {
-        if (!gameRunning) return;
+    const endSnake = () => {
+        snakeRunning = false;
+        clearTimeout(snakeLoopHandle);
 
-        if (keys.up) {
-            player.y -= player.speed;
+        if (snakeScore > snakeBest) {
+            snakeBest = snakeScore;
+            localStorage.setItem("quantum_snake_best", String(snakeBest));
+
+            if (snakeBestElement) snakeBestElement.textContent = snakeBest;
         }
 
-        if (keys.down) {
-            player.y += player.speed;
-        }
+        snakeOverlay?.classList.remove("hidden");
 
-        clampPaddle(player);
+        if (snakeOverlayTitle) snakeOverlayTitle.textContent = "GAME OVER.";
+        if (snakeOverlayText) snakeOverlayText.textContent = `You scored ${snakeScore}. Try again?`;
 
-        /* AI */
-        const aiCenter =
-            ai.y + ai.height / 2;
+        if (startSnakeButton) startSnakeButton.textContent = "PLAY AGAIN";
+    };
 
-        const target =
-            ball.y;
+    const stepSnake = () => {
+        snakeDirection = snakeNextDirection;
 
-        if (aiCenter < target - 10) {
-            ai.y += ai.speed;
-        } else if (aiCenter > target + 10) {
-            ai.y -= ai.speed;
-        }
-
-        clampPaddle(ai);
-
-        /* Ball */
-        ball.x += ball.speedX;
-        ball.y += ball.speedY;
+        const head = {
+            x: snake[0].x + snakeDirection.x,
+            y: snake[0].y + snakeDirection.y
+        };
 
         if (
-            ball.y - ball.radius <= 0 ||
-            ball.y + ball.radius >= GAME_HEIGHT
+            head.x < 0 || head.x >= SNAKE_COLS ||
+            head.y < 0 || head.y >= SNAKE_COLS ||
+            snake.some(segment => segment.x === head.x && segment.y === head.y)
         ) {
-            ball.speedY *= -1;
+            endSnake();
+            return;
         }
 
-        /* Player collision */
-        if (
-            ball.x - ball.radius <=
-                player.x + player.width &&
-            ball.x + ball.radius >=
-                player.x &&
-            ball.y >= player.y &&
-            ball.y <= player.y + player.height &&
-            ball.speedX < 0
-        ) {
-            const relative =
-                (ball.y -
-                    (player.y + player.height / 2)) /
-                (player.height / 2);
+        snake.unshift(head);
 
-            ball.speedX =
-                Math.abs(ball.speedX) * 1.05;
-
-            ball.speedY =
-                relative * 6;
-
-            ball.x =
-                player.x + player.width +
-                ball.radius;
-        }
-
-        /* AI collision */
-        if (
-            ball.x + ball.radius >= ai.x &&
-            ball.x - ball.radius <=
-                ai.x + ai.width &&
-            ball.y >= ai.y &&
-            ball.y <= ai.y + ai.height &&
-            ball.speedX > 0
-        ) {
-            const relative =
-                (ball.y -
-                    (ai.y + ai.height / 2)) /
-                (ai.height / 2);
-
-            ball.speedX =
-                -Math.abs(ball.speedX) * 1.05;
-
-            ball.speedY =
-                relative * 6;
-
-            ball.x =
-                ai.x -
-                ball.radius;
-        }
-
-        /* Score */
-        if (ball.x < -30) {
-            aiScore++;
-
-            aiScoreElement.textContent =
-                aiScore;
-
-            if (aiScore >= 7) {
-                endGame(false);
-            } else {
-                resetBall(1);
-            }
-        }
-
-        if (ball.x > GAME_WIDTH + 30) {
-            playerScore++;
-
-            playerScoreElement.textContent =
-                playerScore;
-
-            if (playerScore >= 7) {
-                endGame(true);
-            } else {
-                resetBall(-1);
-            }
-        }
-    };
-
-    const loop = () => {
-        update();
-        draw();
-
-        requestAnimationFrame(loop);
-    };
-
-    const startGame = () => {
-        resetGame();
-
-        gameRunning = true;
-
-        gameOverlay.classList.add("hidden");
-
-        gameOverlayTitle.textContent =
-            "QUANTUM PONG";
-
-        gameOverlayText.textContent =
-            "First to 7 wins.";
-    };
-
-    const endGame = playerWon => {
-        gameRunning = false;
-
-        gameOverlay.classList.remove(
-            "hidden"
-        );
-
-        if (playerWon) {
-            gameOverlayTitle.textContent =
-                "YOU WIN.";
-
-            gameOverlayText.textContent =
-                "Quantum dominance achieved.";
+        if (head.x === food.x && head.y === food.y) {
+            snakeScore++;
+            if (snakeScoreElement) snakeScoreElement.textContent = snakeScore;
+            placeFood();
         } else {
-            gameOverlayTitle.textContent =
-                "AI WINS.";
-
-            gameOverlayText.textContent =
-                "The machine got you this time.";
+            snake.pop();
         }
 
-        startGameButton.textContent =
-            "PLAY AGAIN";
+        drawSnakeFrame();
+
+        if (snakeRunning) {
+            snakeLoopHandle = setTimeout(stepSnake, SNAKE_SPEED_MS);
+        }
     };
 
-    startGameButton?.addEventListener(
-        "click",
-        startGame
-    );
-
-    document.addEventListener(
-        "keydown",
-        event => {
-            if (
-                event.key === "w" ||
-                event.key === "W" ||
-                event.key === "ArrowUp"
-            ) {
-                keys.up = true;
-                event.preventDefault();
-            }
-
-            if (
-                event.key === "s" ||
-                event.key === "S" ||
-                event.key === "ArrowDown"
-            ) {
-                keys.down = true;
-                event.preventDefault();
-            }
-        }
-    );
-
-    document.addEventListener(
-        "keyup",
-        event => {
-            if (
-                event.key === "w" ||
-                event.key === "W" ||
-                event.key === "ArrowUp"
-            ) {
-                keys.up = false;
-            }
-
-            if (
-                event.key === "s" ||
-                event.key === "S" ||
-                event.key === "ArrowDown"
-            ) {
-                keys.down = false;
-            }
-        }
-    );
-
-    const bindTouchControl = (
-        element,
-        direction
-    ) => {
-        if (!element) return;
-
-        const start = event => {
-            event.preventDefault();
-            keys[direction] = true;
-        };
-
-        const stop = event => {
-            event.preventDefault();
-            keys[direction] = false;
-        };
-
-        element.addEventListener(
-            "touchstart",
-            start,
-            { passive: false }
-        );
-
-        element.addEventListener(
-            "touchend",
-            stop,
-            { passive: false }
-        );
-
-        element.addEventListener(
-            "touchcancel",
-            stop,
-            { passive: false }
-        );
-
-        element.addEventListener(
-            "mousedown",
-            start
-        );
-
-        element.addEventListener(
-            "mouseup",
-            stop
-        );
-
-        element.addEventListener(
-            "mouseleave",
-            stop
-        );
+    const pauseSnakeLoop = () => {
+        snakeRunning = false;
+        clearTimeout(snakeLoopHandle);
     };
 
-    bindTouchControl(
-        touchUp,
-        "up"
-    );
+    const startSnake = () => {
+        resetSnake();
+        snakeRunning = true;
 
-    bindTouchControl(
-        touchDown,
-        "down"
-    );
+        snakeOverlay?.classList.add("hidden");
 
-    draw();
-    loop();
+        drawSnakeFrame();
+
+        clearTimeout(snakeLoopHandle);
+        snakeLoopHandle = setTimeout(stepSnake, SNAKE_SPEED_MS);
+    };
+
+    startSnakeButton?.addEventListener("click", startSnake);
+
+    const setSnakeDirection = (x, y) => {
+        if (!snakeRunning) return;
+
+        if (snakeDirection.x === -x && snakeDirection.y === -y) return;
+
+        snakeNextDirection = { x, y };
+    };
+
+    document.addEventListener("keydown", event => {
+        const tag = event.target?.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA") return;
+
+        const container = gameContainers.snake;
+
+        if (!container || container.classList.contains("hidden")) return;
+
+        if (event.key === "w" || event.key === "W" || event.key === "ArrowUp") {
+            setSnakeDirection(0, -1);
+            event.preventDefault();
+        } else if (event.key === "s" || event.key === "S" || event.key === "ArrowDown") {
+            setSnakeDirection(0, 1);
+            event.preventDefault();
+        } else if (event.key === "a" || event.key === "A" || event.key === "ArrowLeft") {
+            setSnakeDirection(-1, 0);
+            event.preventDefault();
+        } else if (event.key === "d" || event.key === "D" || event.key === "ArrowRight") {
+            setSnakeDirection(1, 0);
+            event.preventDefault();
+        }
+    });
+
+    snakeUpBtn?.addEventListener("click", () => setSnakeDirection(0, -1));
+    snakeDownBtn?.addEventListener("click", () => setSnakeDirection(0, 1));
+    snakeLeftBtn?.addEventListener("click", () => setSnakeDirection(-1, 0));
+    snakeRightBtn?.addEventListener("click", () => setSnakeDirection(1, 0));
+
+    /* =====================================================
+       TIC TAC TOE (unbeatable minimax AI)
+    ===================================================== */
+
+    const tttBoardElement = document.getElementById("tttBoard");
+    const tttStatus = document.getElementById("tttStatus");
+    const tttResetButton = document.getElementById("tttReset");
+    const tttPlayerScoreEl = document.getElementById("tttPlayerScore");
+    const tttAiScoreEl = document.getElementById("tttAiScore");
+
+    const WIN_LINES = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6]
+    ];
+
+    let tttBoard = Array(9).fill(null);
+    let tttGameOver = false;
+    let tttPlayerScore = 0;
+    let tttAiScore = 0;
+
+    const initTicTacToe = () => {
+        if (tttInitialized || !tttBoardElement) return;
+
+        tttInitialized = true;
+
+        for (let i = 0; i < 9; i++) {
+            const cell = document.createElement("button");
+            cell.type = "button";
+            cell.className = "ttt-cell";
+            cell.dataset.index = String(i);
+
+            cell.addEventListener("click", () => handleTttMove(i));
+
+            tttBoardElement.appendChild(cell);
+        }
+
+        tttResetButton?.addEventListener("click", resetTicTacToe);
+
+        resetTicTacToe();
+    };
+
+    const getWinner = (board) => {
+        for (const line of WIN_LINES) {
+            const [a, b, c] = line;
+
+            if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                return { player: board[a], line };
+            }
+        }
+
+        if (board.every(cell => cell)) {
+            return { player: "draw", line: null };
+        }
+
+        return null;
+    };
+
+    const minimax = (board, isMaximizing) => {
+        const result = getWinner(board);
+
+        if (result) {
+            if (result.player === "O") return { score: 1 };
+            if (result.player === "X") return { score: -1 };
+            return { score: 0 };
+        }
+
+        const scores = [];
+
+        board.forEach((cell, index) => {
+            if (cell) return;
+
+            const nextBoard = board.slice();
+            nextBoard[index] = isMaximizing ? "O" : "X";
+
+            const evalResult = minimax(nextBoard, !isMaximizing);
+
+            scores.push({ index, score: evalResult.score });
+        });
+
+        if (isMaximizing) {
+            return scores.reduce((best, cur) => (cur.score > best.score ? cur : best));
+        }
+
+        return scores.reduce((best, cur) => (cur.score < best.score ? cur : best));
+    };
+
+    const renderTtt = () => {
+        const cells = tttBoardElement.querySelectorAll(".ttt-cell");
+
+        cells.forEach((cell, index) => {
+            const value = tttBoard[index];
+
+            cell.textContent = value || "";
+            cell.classList.toggle("filled", Boolean(value));
+            cell.classList.toggle("x-mark", value === "X");
+            cell.classList.toggle("o-mark", value === "O");
+        });
+    };
+
+    const highlightWin = (line) => {
+        if (!line) return;
+
+        line.forEach(index => {
+            tttBoardElement.children[index]?.classList.add("win-cell");
+        });
+    };
+
+    const aiMove = () => {
+        const best = minimax(tttBoard, true);
+
+        if (best?.index === undefined) return;
+
+        tttBoard[best.index] = "O";
+        renderTtt();
+
+        checkTttEnd();
+    };
+
+    const checkTttEnd = () => {
+        const result = getWinner(tttBoard);
+
+        if (!result) {
+            if (tttStatus) tttStatus.textContent = "Your move.";
+            return false;
+        }
+
+        tttGameOver = true;
+
+        if (result.player === "draw") {
+            if (tttStatus) tttStatus.textContent = "It's a draw.";
+        } else if (result.player === "X") {
+            tttPlayerScore++;
+            if (tttPlayerScoreEl) tttPlayerScoreEl.textContent = tttPlayerScore;
+            if (tttStatus) tttStatus.textContent = "You win!";
+            highlightWin(result.line);
+        } else {
+            tttAiScore++;
+            if (tttAiScoreEl) tttAiScoreEl.textContent = tttAiScore;
+            if (tttStatus) tttStatus.textContent = "Quantum AI wins.";
+            highlightWin(result.line);
+        }
+
+        return true;
+    };
+
+    const handleTttMove = (index) => {
+        if (tttGameOver || tttBoard[index]) return;
+
+        tttBoard[index] = "X";
+        renderTtt();
+
+        if (checkTttEnd()) return;
+
+        if (tttStatus) tttStatus.textContent = "Quantum AI is thinking...";
+
+        setTimeout(() => {
+            aiMove();
+        }, 300);
+    };
+
+    const resetTicTacToe = () => {
+        tttBoard = Array(9).fill(null);
+        tttGameOver = false;
+
+        renderTtt();
+
+        tttBoardElement.querySelectorAll(".ttt-cell").forEach(cell => {
+            cell.classList.remove("win-cell");
+        });
+
+        if (tttStatus) tttStatus.textContent = "Your move.";
+    };
 
     /* =====================================================
        CLEANUP
@@ -1553,12 +1838,6 @@ document.addEventListener("DOMContentLoaded", () => {
         "beforeunload",
         () => {
             cleanupRecordingStream();
-
-            if (
-                "speechSynthesis" in window
-            ) {
-                window.speechSynthesis.cancel();
-            }
         }
     );
 });
